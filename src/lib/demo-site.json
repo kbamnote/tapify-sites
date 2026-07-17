@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "site": { "name": "Impulsse Career Institutions", "industry": "coaching", "locale": "en-IN" },
+  "theme": {
+    "preset": "navy-gold",
+    "mode": "light",
+    "color": {
+      "primary": "#1B3A6B",
+      "secondary": "#2C5AA0",
+      "accent": "#F7941D",
+      "bg": "#FFFFFF",
+      "surface": "#F5F7FB",
+      "text": "#111827",
+      "muted": "#6B7280",
+      "border": "#E5E7EB"
+    },
+    "font": { "heading": "Poppins", "body": "Poppins" },
+    "radius": "md",
+    "spacing": "comfortable",
+    "container": "normal"
+  },
+  "nav": { "header": [{ "label": "Home", "pageId": "home" }] },
+  "business": {
+    "phone": "09850332383",
+    "whatsapp": "919850332383",
+    "email": "impulsseinstitutions@gmail.com",
+    "website": "https://www.impulsse.co.in",
+    "address": "Impulsse-Gurukul, Plot No. 47, Chaitaneshwar Nagar, Kharbi Road, Wathoda, Nagpur-440034 (MH)",
+    "social": {
+      "facebook": "https://facebook.com/",
+      "instagram": "https://instagram.com/",
+      "youtube": "https://youtube.com/"
+    },
+    "hours": [
+      { "day": "mon", "open": "10:00 AM", "close": "08:00 PM" },
+      { "day": "sat", "open": "10:00 AM", "close": "08:00 PM" },
+      { "day": "sun", "closed": true }
+    ]
+  },
+  "forms": [
+    {
+      "id": "enquiry",
+      "title": "Admission Enquiry",
+      "submitText": "Send enquiry",
+      "fields": [
+        { "name": "name", "label": "Your name", "type": "text", "required": true },
+        { "name": "phone", "label": "Phone", "type": "tel", "required": true },
+        { "name": "course", "label": "Course", "type": "select", "options": ["IIT-JEE", "NEET", "MHT-CET", "Foundation"] },
+        { "name": "message", "label": "Message", "type": "textarea" }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "id": "home",
+      "slug": "/",
+      "title": "Home",
+      "seo": {
+        "title": "Impulsse Career Institutions | IIT-JEE, NEET & MHT-CET Coaching, Nagpur",
+        "description": "Central India's award-winning coaching for IIT-JEE (Mains & Advanced), NEET (UG) and MHT-CET. 17 years of excellence.",
+        "robots": "index,follow"
+      },
+      "sections": [
+        {
+          "id": "s_hero1",
+          "type": "hero",
+          "variant": "centered-bg",
+          "visible": true,
+          "style": { "paddingY": "xl", "align": "center", "bg": "image", "overlay": 0.62 },
+          "props": {
+            "badge": "Admissions Open 2025-26",
+            "heading": "You Have Dreams, We Turn Them Into Reality",
+            "sub": "Central India's award-winning institution for IIT-JEE (Mains & Advanced), NEET (UG) and MHT-CET. An extraordinary learning experience — 17 years of excellence.",
+            "ctaPrimary": { "text": "Enroll Now", "href": "#contact", "style": "primary" },
+            "ctaSecondary": { "text": "Explore Courses", "href": "#s_services1", "style": "ghost" },
+            "showWhatsapp": true,
+            "showCall": true
+          }
+        },
+        {
+          "id": "s_about1",
+          "type": "about",
+          "variant": "image-right",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "left", "bg": "default" },
+          "props": {
+            "label": "About Us",
+            "heading": "About Impulsse",
+            "body": "A premier institution in the competitive segment, delivering quality education for Pre-Engineering (IIT-JEE / MHT-CET) and Pre-Medical (NEET) exams. Established in 2009, Impulsse has helped students explore their full potential and realise their dreams for over a decade.",
+            "showPillars": true,
+            "pillars": [
+              { "title": "Our Vision", "text": "To become India's most trusted destination for JEE and NEET preparation, turning aspirations into achievements." },
+              { "title": "Our Mission", "text": "To shape responsible leaders who create a positive impact — not just exam results." }
+            ]
+          }
+        },
+        {
+          "id": "s_stats1",
+          "type": "stats",
+          "variant": "bar",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "center", "bg": "primary" },
+          "props": {
+            "countUp": true,
+            "items": [
+              { "value": 10200, "suffix": "+", "label": "Classroom Students" },
+              { "value": 6894, "suffix": "+", "label": "JEE / MHT-CET Selections" },
+              { "value": 17, "suffix": "+", "label": "Years of Excellence" },
+              { "value": 1826, "suffix": "+", "label": "NEET Selections" }
+            ]
+          }
+        },
+        {
+          "id": "s_services1",
+          "type": "services",
+          "variant": "cards-3",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "center", "bg": "default" },
+          "props": {
+            "label": "Our Courses",
+            "heading": "Courses We Offer",
+            "sub": "Comprehensive programs designed to help you crack competitive exams with confidence.",
+            "items": [
+              { "title": "IIT-JEE (Mains & Advanced)", "desc": "Comprehensive Pre-Engineering coaching with our 360° teaching methodology.", "meta": "2 Years · Class 11-12", "cta": { "text": "Enquire now", "href": "#contact", "style": "link" } },
+              { "title": "NEET (UG)", "desc": "Pre-Medical preparation for Govt. MBBS and AIIMS, led by expert faculty.", "meta": "2 Years · Class 11-12", "cta": { "text": "Enquire now", "href": "#contact", "style": "link" } },
+              { "title": "MHT-CET & Foundation", "desc": "MHT-CET coaching plus a Foundation program for Std. 6th-10th.", "meta": "1-2 Years", "cta": { "text": "Enquire now", "href": "#contact", "style": "link" } }
+            ]
+          }
+        },
+        {
+          "id": "s_team1",
+          "type": "team",
+          "variant": "cards-3",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "center", "bg": "surface" },
+          "props": {
+            "label": "Our Faculty",
+            "heading": "Learn from the best",
+            "items": [
+              { "name": "Nandkumar Kautkar", "role": "Mathematics", "meta": "34 Years Experience", "bio": "Focused on speed, accuracy and problem-solving strategy for JEE and MHT-CET." },
+              { "name": "Priti Dhande", "role": "Biology", "meta": "18 Years Experience", "bio": "Guides NEET aspirants with conceptual clarity and structured revision." },
+              { "name": "Dr. Ranjeet Sinha", "role": "Chemistry", "meta": "28 Years Experience", "bio": "Renowned for making the toughest concepts simple for competitive exams." }
+            ]
+          }
+        },
+        {
+          "id": "s_test1",
+          "type": "testimonials",
+          "variant": "cards-3",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "center", "bg": "default" },
+          "props": {
+            "label": "Testimonials",
+            "heading": "What our students say",
+            "items": [
+              { "quote": "The personal mentorship and test series kept me on track. Regular rank tracking showed me exactly where to improve.", "name": "Rahul P.", "role": "IIT-JEE Aspirant", "rating": 5 },
+              { "quote": "The Biology and Chemistry faculty are outstanding. Daily doubt-solving made NEET preparation stress-free.", "name": "Sneha K.", "role": "NEET Aspirant", "rating": 5 },
+              { "quote": "The disciplined approach helped me practise thousands of questions. Truly an extraordinary experience.", "name": "Aditya M.", "role": "MHT-CET Aspirant", "rating": 5 }
+            ]
+          }
+        },
+        {
+          "id": "s_faq1",
+          "type": "faq",
+          "variant": "accordion",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "center", "bg": "surface" },
+          "props": {
+            "label": "FAQ",
+            "heading": "Frequently asked questions",
+            "openFirst": true,
+            "items": [
+              { "q": "Which courses does Impulsse offer?", "a": "IIT-JEE (Mains & Advanced), NEET (UG), MHT-CET, and a Foundation & Olympiad program for Std. 6th-10th." },
+              { "q": "What are your timings and where are you located?", "a": "10 AM to 8 PM, Monday to Saturday (Sunday closed), at Impulsse-Gurukul, Kharbi Road, Wathoda, Nagpur." },
+              { "q": "How do I take admission?", "a": "Call 09850332383 or message us on WhatsApp to book a counselling session. Seats are limited." }
+            ]
+          }
+        },
+        {
+          "id": "s_cta1",
+          "type": "cta",
+          "variant": "banner",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "center", "bg": "dark" },
+          "props": {
+            "heading": "Ready to start your success journey?",
+            "sub": "Talk to our counsellors today — seats are limited.",
+            "ctaPrimary": { "text": "Book counselling", "href": "#contact", "style": "secondary" },
+            "showWhatsapp": true,
+            "showCall": true
+          }
+        },
+        {
+          "id": "s_contact1",
+          "type": "contact",
+          "variant": "form-map",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "center", "bg": "default" },
+          "props": {
+            "label": "Contact",
+            "heading": "Admissions & Enquiry",
+            "sub": "We usually reply within a few hours.",
+            "showPhone": true,
+            "showWhatsapp": true,
+            "showEmail": true,
+            "showAddress": true,
+            "showHours": true,
+            "showMap": true,
+            "formId": "enquiry"
+          }
+        },
+        {
+          "id": "s_footer1",
+          "type": "footer",
+          "variant": "columns",
+          "visible": true,
+          "style": { "paddingY": "lg", "align": "left", "bg": "dark" },
+          "props": {
+            "blurb": "An innovative concept for IIT-JEE (Mains & Advanced), NEET (UG) and MHT-CET. Driven by Vision, Defined by Success.",
+            "showSocial": true,
+            "showContact": true,
+            "showBranding": true,
+            "columns": [
+              {
+                "title": "Quick Links",
+                "links": [
+                  { "text": "About", "href": "#s_about1" },
+                  { "text": "Courses", "href": "#s_services1" },
+                  { "text": "Faculty", "href": "#s_team1" },
+                  { "text": "Contact", "href": "#contact" }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
