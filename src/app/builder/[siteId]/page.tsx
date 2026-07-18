@@ -1,26 +1,25 @@
-import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import type { Metadata } from "next";
 
 import type { SiteDoc } from "@/lib/types";
 import type { SchemaBundle, SectionManifest } from "@/builder/schema-types";
 import { API_BASE } from "@/lib/api";
 import Editor from "@/builder/Editor";
+import BuilderLoader from "@/builder/BuilderLoader";
 import demoSite from "@/lib/demo-site.json";
 
 /**
- * The builder editor — served at builder.tapify.co.in/builder/<siteId>.
+ * The builder editor — builder.tapify.co.in/builder/<siteId>.
  *
- * The section manifests come from the LIVE backend (api/sites/schema.php), so
- * the editor's UI is generated from the same contract the validator enforces.
- * Ship a new section manifest and this editor supports it with no redeploy.
+ * Split deliberately:
+ *  - SERVER fetches the section manifests. They are public and cacheable, and
+ *    the editor generates its entire UI from them, so a new section manifest is
+ *    supported with no redeploy.
+ *  - BROWSER fetches the site draft (see BuilderLoader). The Tapify session
+ *    cookie is host-only for app.tapify.co.in, so it never reaches this server;
+ *    fetching the draft here would always look signed-out.
  *
- * The draft is private, so the user's Tapify session cookie is forwarded. That
- * works with no extra auth because the backend's CORS already trusts
- * *.tapify.co.in origins with credentials.
- *
- * /builder/demo renders a local fixture so the editor can be worked on before
- * anything is published.
+ * /builder/demo runs on a local fixture so the editor can be tried without an
+ * account and without publishing anything.
  */
 
 export const dynamic = "force-dynamic";
@@ -42,21 +41,6 @@ async function getManifests(): Promise<SectionManifest[]> {
   }
 }
 
-async function getDraft(siteId: string, cookie: string | null) {
-  try {
-    const res = await fetch(`${API_BASE}/sites/get.php?id=${encodeURIComponent(siteId)}&kind=draft`, {
-      cache: "no-store",
-      headers: cookie ? { cookie } : undefined,
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (!json?.success) return null;
-    return json.data as { site: { id: number; slug: string; name: string }; rev: number; doc: SiteDoc };
-  } catch {
-    return null;
-  }
-}
-
 export default async function BuilderPage({ params }: { params: Promise<{ siteId: string }> }) {
   const { siteId } = await params;
   const manifests = await getManifests();
@@ -75,7 +59,7 @@ export default async function BuilderPage({ params }: { params: Promise<{ siteId
     );
   }
 
-  // Demo mode: local fixture, no backend site required.
+  // Demo mode: local fixture, no account required.
   if (siteId === "demo") {
     return (
       <Editor
@@ -89,17 +73,5 @@ export default async function BuilderPage({ params }: { params: Promise<{ siteId
     );
   }
 
-  const cookie = (await headers()).get("cookie");
-  const data = await getDraft(siteId, cookie);
-  if (!data) notFound();
-
-  return (
-    <Editor
-      siteId={data.site.id}
-      slug={data.site.slug}
-      rev={data.rev}
-      doc={data.doc}
-      manifests={manifests}
-    />
-  );
+  return <BuilderLoader siteId={siteId} manifests={manifests} />;
 }
