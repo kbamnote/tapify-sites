@@ -50,6 +50,8 @@ export default function TopBar() {
 
   const [publishing, setPublishing] = useState<"idle" | "busy" | "done" | "error">("idle");
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
+  // Result banner after publishing: the real URL + whether the address is ready.
+  const [published, setPublished] = useState<{ url: string; ready: boolean; note: string } | null>(null);
 
   // Ctrl/Cmd+Z / Shift+Z, Ctrl/Cmd+S
   useEffect(() => {
@@ -95,6 +97,15 @@ export default function TopBar() {
         setPublishMsg((json?.errors ?? [])[0] ?? json?.message ?? "Publish failed");
         return;
       }
+
+      // The site is published either way; the address may still be setting up.
+      const d = json.data ?? {};
+      setPublished({
+        url: d.url ?? (slug ? `https://${slug}.tapify.co.in` : ""),
+        ready: !!d.domain?.ok,
+        note: d.domain?.message ?? "",
+      });
+
       setPublishing("done");
       setPublishMsg(null);
       setTimeout(() => setPublishing("idle"), 2500);
@@ -105,6 +116,25 @@ export default function TopBar() {
   }
 
   return (
+    <>
+    {published && (
+      <div
+        className={`flex items-center justify-between gap-3 px-3 py-2 text-[11px] ${
+          published.ready ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"
+        }`}
+      >
+        <span className="min-w-0 truncate">
+          {published.ready ? "Your website is live at " : "Published. Finishing the address setup — "}
+          <a href={published.url} target="_blank" rel="noopener noreferrer" className="font-bold underline">
+            {published.url.replace(/^https?:\/\//, "")}
+          </a>
+          {published.note && !published.ready ? ` · ${published.note}` : ""}
+        </span>
+        <button type="button" onClick={() => setPublished(null)} className="shrink-0 opacity-60 hover:opacity-100">
+          ✕
+        </button>
+      </div>
+    )}
     <header className="flex h-12 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3">
       <div className="flex min-w-0 items-center gap-3">
         <span className="truncate text-sm font-bold text-slate-900">{doc?.site.name ?? "Untitled site"}</span>
@@ -171,5 +201,6 @@ export default function TopBar() {
         </button>
       </div>
     </header>
+    </>
   );
 }
