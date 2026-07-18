@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import type { SiteDoc } from "@/lib/types";
@@ -92,7 +92,14 @@ export async function generateMetadata({ params }: { params: Promise<RouteParams
 
 export default async function SitePage({ params }: { params: Promise<RouteParams> }) {
   const resolved = await resolveSite(params);
-  if (!resolved) notFound();
+
+  if (!resolved) {
+    // On the builder host there is no customer site to render, so the bare root
+    // would 404 and read as a broken deployment. Send it to the builder instead.
+    const host = ((await headers()).get("host") ?? "").split(":")[0].toLowerCase();
+    if (host.startsWith("builder.")) redirect("/builder");
+    notFound();
+  }
 
   const { doc, path, isDemo } = resolved;
   const page = findPage(doc, path);
