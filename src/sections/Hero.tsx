@@ -7,6 +7,7 @@ interface HeroProps {
   heading?: string;
   sub?: string;
   image?: string;
+  fullHeight?: boolean;
   ctaPrimary?: LinkT;
   ctaSecondary?: LinkT;
   showWhatsapp?: boolean;
@@ -26,6 +27,9 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
       ? { ...section, style: { ...(section.style ?? {}), bg: "image" as const, bgMedia: props.image, overlay: section.style?.overlay ?? 0.55 } }
       : section;
   const onDark = isDarkBg(heroSection.style);
+
+  // Full-viewport hero, like a landing page: fill the screen and centre content.
+  const fullClass = props.fullHeight ? "min-h-dvh flex flex-col justify-center" : "";
 
   const heading = (
     <h1
@@ -74,7 +78,7 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
   // Split: text one side, image the other.
   if (variant === "split" && img) {
     return (
-      <SectionShell section={section}>
+      <SectionShell section={section} className={fullClass}>
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2" style={{ textAlign: "left" }}>
           <div>{body}</div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -91,7 +95,7 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
 
   // centered-bg / minimal — the background image is handled by SectionShell.
   return (
-    <SectionShell section={heroSection}>
+    <SectionShell section={heroSection} className={fullClass}>
       <div className="mx-auto flex max-w-3xl flex-col" style={{ alignItems: "inherit" }}>
         {body}
       </div>
