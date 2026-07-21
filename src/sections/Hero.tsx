@@ -17,7 +17,15 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
   const variant = section.variant ?? "centered-bg";
   const img = mediaUrl(props.image);
   const biz = doc.business ?? {};
-  const onDark = isDarkBg(section.style);
+
+  // "Centered on background image": the Image field IS the section background.
+  // The document keeps the picture in props.image, so feed it into the shell as
+  // the background rather than expecting a separate Style → Background image.
+  const heroSection =
+    variant === "centered-bg" && props.image
+      ? { ...section, style: { ...(section.style ?? {}), bg: "image" as const, bgMedia: props.image, overlay: section.style?.overlay ?? 0.55 } }
+      : section;
+  const onDark = isDarkBg(heroSection.style);
 
   const heading = (
     <h1
@@ -83,7 +91,7 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
 
   // centered-bg / minimal — the background image is handled by SectionShell.
   return (
-    <SectionShell section={section}>
+    <SectionShell section={heroSection}>
       <div className="mx-auto flex max-w-3xl flex-col" style={{ alignItems: "inherit" }}>
         {body}
       </div>
