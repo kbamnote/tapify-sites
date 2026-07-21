@@ -62,6 +62,17 @@
       },
       "sections": [
         {
+          "id": "s_header1",
+          "type": "header",
+          "variant": "left",
+          "visible": true,
+          "style": { "bg": "default" },
+          "props": {
+            "cta": { "text": "Enquire Now", "href": "#contact", "style": "primary" },
+            "sticky": true
+          }
+        },
+        {
           "id": "s_hero1",
           "type": "hero",
           "variant": "centered-bg",

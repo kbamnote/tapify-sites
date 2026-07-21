@@ -16,6 +16,8 @@ export default function SectionTree() {
   const selectedId = useBuilder((s) => s.selectedId);
   const manifests = useBuilder((s) => s.manifests);
   const select = useBuilder((s) => s.select);
+  const selectPage = useBuilder((s) => s.selectPage);
+  const setRightTab = useBuilder((s) => s.setRightTab);
   const move = useBuilder((s) => s.moveSection);
   const remove = useBuilder((s) => s.removeSection);
   const duplicate = useBuilder((s) => s.duplicateSection);
@@ -43,8 +45,37 @@ export default function SectionTree() {
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [manifests, q]);
 
+  const pages = doc?.pages ?? [];
+
   return (
     <div className="flex h-full flex-col">
+      {/* Page switcher — one click to move between pages; “Manage” opens the
+          full Pages panel on the right. Hidden when there's only one page. */}
+      {pages.length > 0 && (
+        <div className="flex items-center gap-1.5 border-b border-slate-200 px-2 py-2">
+          <select
+            value={page?.id ?? ""}
+            onChange={(e) => selectPage(e.target.value)}
+            className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2 py-1.5 text-[11px] font-semibold text-slate-800 outline-none focus:border-slate-900"
+            title="Switch page"
+          >
+            {pages.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title}{p.slug === "/" ? " (home)" : ""}{p.visible === false ? " • hidden" : ""}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => setRightTab("pages")}
+            title="Manage pages"
+            className="shrink-0 rounded border border-slate-300 px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:border-slate-900 hover:text-slate-900"
+          >
+            Pages
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2.5">
         <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Sections</span>
         <button

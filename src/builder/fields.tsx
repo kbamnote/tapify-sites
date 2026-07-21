@@ -9,10 +9,12 @@
  * that requires touching this file (and the app's equivalent).
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FieldDef } from "./schema-types";
 import { itemLabel } from "./schema-types";
 import type { Link as LinkT } from "@/lib/types";
+import { useBuilder } from "./store";
+import { uploadMedia, mediaSrc, ApiError, NotSignedInError } from "./client-api";
 
 /* ------------------------------------------------------------------ chrome */
 
@@ -128,24 +130,101 @@ function ColorField({ value, onChange }: FieldProps) {
 }
 
 /**
- * Media picker. Phase 3 swaps the input for the media library modal; the stored
- * value ("media:<id>" or a URL) does not change, so nothing else needs updating.
+ * Media picker: upload a file OR paste a URL / media ref. Uploads go to the
+ * media library and the document stores the returned "media:<id>" — never a raw
+ * URL — so the file can later be replaced or CDN-swapped without touching any
+ * site JSON. A pasted https URL is still accepted and stored verbatim.
  */
 function MediaField({ field, value, onChange }: FieldProps) {
   const v = (value as string) ?? "";
-  const preview = v && !v.startsWith("media:") ? v : null;
+  const siteId = useBuilder((s) => s.siteId);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [drag, setDrag] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const preview = mediaSrc(v);
+
+  async function upload(file: File) {
+    setError(null);
+    setBusy(true);
+    try {
+      const media = await uploadMedia(file, siteId);
+      onChange(media.ref); // store "media:<id>", not the URL
+    } catch (e) {
+      if (e instanceof NotSignedInError) {
+        setError("Please sign in again to upload.");
+      } else {
+        setError(e instanceof ApiError ? e.message : "Upload failed. Please try again.");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-1.5">
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragLeave={() => setDrag(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDrag(false);
+          const f = e.dataTransfer.files?.[0];
+          if (f) void upload(f);
+        }}
+        className={`relative flex flex-col items-center justify-center gap-1 rounded-md border border-dashed px-3 py-4 text-center transition-colors ${
+          drag ? "border-slate-900 bg-slate-50" : "border-slate-300"
+        }`}
+      >
+        {preview ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={preview} alt="" className="h-20 w-full rounded object-contain" />
+        ) : (
+          <span className="text-[11px] text-slate-500">
+            {busy ? "Uploading…" : "Drop an image here, or"}
+          </span>
+        )}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => inputRef.current?.click()}
+            className="rounded border border-slate-300 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:border-slate-900 disabled:opacity-50"
+          >
+            {busy ? "Uploading…" : preview ? "Replace" : "Upload"}
+          </button>
+          {v && !busy && (
+            <button
+              type="button"
+              onClick={() => { onChange(""); setError(null); }}
+              className="rounded px-2 py-1 text-[11px] text-slate-500 hover:text-rose-600"
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/gif,image/webp"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void upload(f);
+            e.target.value = ""; // allow re-selecting the same file
+          }}
+        />
+      </div>
+
+      {/* Escape hatch: paste a URL or an existing media ref directly. */}
       <input
         className={inputCls}
         value={v}
         placeholder={field.placeholder ?? "https://… or media:12"}
         onChange={(e) => onChange(e.target.value)}
       />
-      {preview && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt="" className="h-16 w-full rounded border border-slate-200 object-cover" />
-      )}
+      {error && <p className="text-[10px] text-rose-600">{error}</p>}
     </div>
   );
 }

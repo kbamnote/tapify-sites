@@ -113,3 +113,40 @@ export function slugify(name: string): string {
 export function isValidSlug(slug: string): boolean {
   return /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/.test(slug);
 }
+
+/* ------------------------------------------------------------------- media */
+
+export interface UploadedMedia {
+  id: number;
+  ref: string; // "media:<id>" — this is what goes in the document
+  url: string;
+  kind: string;
+  mime: string;
+  bytes: number;
+  width: number | null;
+  height: number | null;
+}
+
+/**
+ * Upload one file to the media library. Passing the FormData through `request`
+ * unchanged lets the browser set the multipart boundary itself — setting
+ * Content-Type by hand here would corrupt the body.
+ */
+export function uploadMedia(file: File, siteId?: number | string | null): Promise<UploadedMedia> {
+  const fd = new FormData();
+  fd.append("file", file);
+  if (siteId != null) fd.append("site_id", String(siteId));
+  return request<UploadedMedia>("/sites/media.php", { method: "POST", body: fd });
+}
+
+/**
+ * Resolve a stored media value to something an <img src> can use.
+ * Mirrors mediaUrl() in lib/api.ts, but points at the API host directly since
+ * this runs in the builder (which is not a customer site).
+ */
+export function mediaSrc(value: string | undefined | null): string | undefined {
+  if (!value) return undefined;
+  if (/^(https?:\/\/|\/)/.test(value)) return value;
+  const m = /^media:(\d+)$/.exec(value);
+  return m ? `${API}/sites/media.php?id=${m[1]}` : undefined;
+}

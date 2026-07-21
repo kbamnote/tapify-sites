@@ -15,7 +15,7 @@
  */
 
 import { create } from "zustand";
-import type { Section, SiteDoc, SectionStyle } from "@/lib/types";
+import type { Section, SiteDoc, SectionStyle, ThemeTokens, Seo } from "@/lib/types";
 import type { SectionManifest } from "./schema-types";
 
 const HISTORY_LIMIT = 60;
@@ -40,6 +40,7 @@ interface BuilderState {
   pageId: string | null;
   selectedId: string | null;
   device: Device;
+  rightTab: "section" | "theme" | "pages" | "seo";
 
   saveState: SaveState;
   saveError: string | null;
@@ -55,6 +56,20 @@ interface BuilderState {
   selectPage(pageId: string): void;
   select(sectionId: string | null): void;
   setDevice(d: Device): void;
+  setRightTab(tab: "section" | "theme" | "pages" | "seo"): void;
+
+  // pages
+  addPage(): void;
+  renamePage(pageId: string, title: string): void;
+  setPageSlug(pageId: string, slug: string): void;
+  setHomePage(pageId: string): void;
+  movePage(pageId: string, dir: -1 | 1): void;
+  removePage(pageId: string): void;
+  togglePageVisible(pageId: string): void;
+
+  // SEO / site meta
+  setPageSeo(pageId: string, patch: Partial<Seo>): void;
+  setSiteMeta(patch: { name?: string; favicon?: string }): void;
 
   // mutations
   setProp(sectionId: string, key: string, value: unknown): void;
@@ -68,6 +83,8 @@ interface BuilderState {
   setThemeColor(key: string, value: string): void;
   setThemeFont(which: "heading" | "body", value: string): void;
   setThemeToken(key: "radius" | "spacing" | "container" | "mode", value: string): void;
+  /** Merge a partial theme (e.g. a preset) in ONE history/save step. */
+  applyTheme(patch: Partial<ThemeTokens>): void;
 
   // history + save
   undo(): void;
@@ -86,6 +103,28 @@ function newId(): string {
   const b = new Uint8Array(5);
   crypto.getRandomValues(b);
   return "s_" + Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+/** A page id, distinct prefix from sections for readability. */
+function newPageId(): string {
+  const b = new Uint8Array(4);
+  crypto.getRandomValues(b);
+  return "p_" + Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+/** Normalise a title into the slug BODY (no leading slash). "About Us" -> "about-us". */
+function slugBody(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9/]+/g, "-").replace(/-+/g, "-").replace(/^[-/]+|[-/]+$/g, "");
+}
+
+/** A route slug ("/about") that no other page already uses. */
+function uniqueSlug(pages: { id: string; slug: string }[], base: string, exceptId: string): string {
+  const taken = new Set(pages.filter((p) => p.id !== exceptId).map((p) => p.slug));
+  const body = slugBody(base) || "page";
+  let slug = "/" + body;
+  let n = 2;
+  while (taken.has(slug)) slug = `/${body}-${n++}`;
+  return slug;
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -134,6 +173,7 @@ export const useBuilder = create<BuilderState>((set, get) => {
     pageId: null,
     selectedId: null,
     device: "desktop",
+    rightTab: "section",
     saveState: "idle",
     saveError: null,
     conflict: null,
@@ -158,8 +198,11 @@ export const useBuilder = create<BuilderState>((set, get) => {
     },
 
     selectPage: (pageId) => set({ pageId, selectedId: null }),
-    select: (selectedId) => set({ selectedId }),
+    // Selecting a section pulls the right panel back to its Inspector, so a click
+    // on the canvas always reveals what you just selected.
+    select: (selectedId) => set(selectedId ? { selectedId, rightTab: "section" } : { selectedId }),
     setDevice: (device) => set({ device }),
+    setRightTab: (rightTab) => set({ rightTab }),
 
     setProp(sectionId, key, value) {
       mutate((doc) =>
@@ -238,6 +281,121 @@ export const useBuilder = create<BuilderState>((set, get) => {
       set({ selectedId: section.id });
     },
 
+    /* ------------------------------------------------------------- pages */
+
+    addPage() {
+      const id = newPageId();
+      // Seed with a hero so the page isn't a blank screen; fall back to empty
+      // if that manifest isn't loaded. Section ids must be unique site-wide.
+      const hero = get().manifests["hero"];
+      const sections: Section[] = [];
+      if (hero) {
+        const s: Section = {
+          id: newId(),
+          type: "hero",
+          variant: hero.defaults?.variant ?? hero.variants[0]?.id,
+          visible: true,
+          props: clone(hero.defaults?.props ?? {}),
+        };
+        if (hero.style?.defaults) s.style = clone(hero.style.defaults) as SectionStyle;
+        sections.push(s);
+      }
+
+      mutate((doc) => {
+        const slug = uniqueSlug(doc.pages, "New Page", id);
+        doc.pages.push({ id, slug, title: "New Page", visible: true, sections });
+      });
+      set({ pageId: id, selectedId: null });
+    },
+
+    renamePage(pageId, title) {
+      mutate((doc) => {
+        const p = doc.pages.find((x) => x.id === pageId);
+        if (p) p.title = title;
+        // Keep any header/footer menu label in step with the page name.
+        for (const item of [...(doc.nav?.header ?? []), ...(doc.nav?.footer ?? [])]) {
+          if (item.pageId === pageId) item.label = title;
+        }
+      });
+    },
+
+    setPageSlug(pageId, slug) {
+      mutate((doc) => {
+        const p = doc.pages.find((x) => x.id === pageId);
+        if (!p || p.slug === "/") return; // the home slug is owned by setHomePage
+        p.slug = uniqueSlug(doc.pages, slug, pageId);
+      });
+    },
+
+    // Make a page the home page ("/"). The old home keeps a route derived from
+    // its title, so the "exactly one /" invariant always holds.
+    setHomePage(pageId) {
+      mutate((doc) => {
+        const target = doc.pages.find((x) => x.id === pageId);
+        if (!target || target.slug === "/") return;
+        const oldHome = doc.pages.find((x) => x.slug === "/");
+        if (oldHome) oldHome.slug = uniqueSlug(doc.pages, oldHome.title || "home", oldHome.id);
+        target.slug = "/";
+        target.visible = true; // the site root can never be hidden
+      });
+    },
+
+    movePage(pageId, dir) {
+      mutate((doc) => {
+        const i = doc.pages.findIndex((x) => x.id === pageId);
+        const j = i + dir;
+        if (i === -1 || j < 0 || j >= doc.pages.length) return;
+        [doc.pages[i], doc.pages[j]] = [doc.pages[j], doc.pages[i]];
+      });
+    },
+
+    removePage(pageId) {
+      const { doc } = get();
+      if (!doc) return;
+      const page = doc.pages.find((x) => x.id === pageId);
+      // Never delete the last page or the home page — both would leave an
+      // unrenderable site. The UI blocks these too; this is the backstop.
+      if (!page || doc.pages.length <= 1 || page.slug === "/") return;
+
+      mutate((d) => {
+        d.pages = d.pages.filter((x) => x.id !== pageId);
+        // Drop any menu entries that pointed at the deleted page.
+        if (d.nav?.header) d.nav.header = d.nav.header.filter((it) => it.pageId !== pageId);
+        if (d.nav?.footer) d.nav.footer = d.nav.footer.filter((it) => it.pageId !== pageId);
+      });
+
+      if (get().pageId === pageId) {
+        const first = get().doc?.pages[0]?.id ?? null;
+        set({ pageId: first, selectedId: null });
+      }
+    },
+
+    togglePageVisible(pageId) {
+      mutate((doc) => {
+        const p = doc.pages.find((x) => x.id === pageId);
+        if (!p || p.slug === "/") return; // the home page must stay visible
+        p.visible = p.visible === false;
+      });
+    },
+
+    /* --------------------------------------------------------- SEO / meta */
+
+    setPageSeo(pageId, patch) {
+      mutate((doc) => {
+        const p = doc.pages.find((x) => x.id === pageId);
+        if (!p) return;
+        p.seo = { ...(p.seo ?? {}), ...patch };
+      });
+    },
+
+    setSiteMeta(patch) {
+      mutate((doc) => {
+        // site.name is required by the validator, so never let it become empty.
+        if (patch.name !== undefined) doc.site.name = patch.name.trim() || doc.site.name;
+        if (patch.favicon !== undefined) doc.site.favicon = patch.favicon || undefined;
+      });
+    },
+
     setThemeColor(key, value) {
       mutate((doc) => {
         doc.theme = doc.theme ?? {};
@@ -257,6 +415,19 @@ export const useBuilder = create<BuilderState>((set, get) => {
         doc.theme = doc.theme ?? {};
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (doc.theme as any)[key] = value;
+      });
+    },
+
+    applyTheme(patch) {
+      mutate((doc) => {
+        const t: ThemeTokens = (doc.theme = doc.theme ?? {});
+        if (patch.color) t.color = { ...(t.color ?? {}), ...patch.color };
+        if (patch.font) t.font = { ...(t.font ?? {}), ...patch.font };
+        if (patch.preset !== undefined) t.preset = patch.preset;
+        if (patch.mode) t.mode = patch.mode;
+        if (patch.radius) t.radius = patch.radius;
+        if (patch.spacing) t.spacing = patch.spacing;
+        if (patch.container) t.container = patch.container;
       });
     },
 

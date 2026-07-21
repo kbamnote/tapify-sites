@@ -148,4 +148,16 @@ export interface SectionProps<P = Record<string, unknown>> {
   section: Section;
   props: P;
   doc: SiteDoc;
+  /**
+   * The site's slug. Not part of the document (it lives on the site row), but
+   * sections that post back to the API — like Contact — need it to identify
+   * which site a submission belongs to. Absent in the builder/demo.
+   */
+  siteSlug?: string;
+  /**
+   * Outcome of a form post that redirected back to this page ("?sent=1|0").
+   * Set by the public renderer only, so the confirmation survives the full-page
+   * round trip and works with JavaScript disabled. Absent in the builder/demo.
+   */
+  formStatus?: "sent" | "error";
 }

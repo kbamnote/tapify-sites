@@ -32,7 +32,9 @@ export const dynamicParams = true;
 type RouteParams = { slug?: string[] };
 
 /** Resolve which document to render for this request. */
-async function resolveSite(params: Promise<RouteParams>): Promise<{ doc: SiteDoc; path: string; isDemo: boolean } | null> {
+type Resolved = { doc: SiteDoc; path: string; isDemo: boolean; siteSlug?: string };
+
+async function resolveSite(params: Promise<RouteParams>): Promise<Resolved | null> {
   const { slug: segments } = await params;
   const path = "/" + (segments ?? []).join("/");
   const normalized = path === "/" ? "/" : path.replace(/\/+$/, "");
@@ -43,7 +45,7 @@ async function resolveSite(params: Promise<RouteParams>): Promise<{ doc: SiteDoc
   if (siteSlug) {
     const res = await getPublishedSite(siteSlug);
     if (!res) return null;
-    return { doc: res.doc, path: normalized, isDemo: false };
+    return { doc: res.doc, path: normalized, isDemo: false, siteSlug };
   }
 
   // No site subdomain (localhost / apex / builder host). In development we render
@@ -90,7 +92,13 @@ export async function generateMetadata({ params }: { params: Promise<RouteParams
   };
 }
 
-export default async function SitePage({ params }: { params: Promise<RouteParams> }) {
+export default async function SitePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<RouteParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const resolved = await resolveSite(params);
 
   if (!resolved) {
@@ -101,9 +109,16 @@ export default async function SitePage({ params }: { params: Promise<RouteParams
     notFound();
   }
 
-  const { doc, path, isDemo } = resolved;
+  const { doc, path, isDemo, siteSlug } = resolved;
   const page = findPage(doc, path);
   if (!page || page.visible === false) notFound();
+
+  // form-submit.php sends the visitor back here with ?sent=1|0. Reading it on the
+  // server keeps the confirmation working without JavaScript; it costs no extra
+  // caching because headers() already makes this route dynamic, and the site
+  // document itself stays cached via the tagged fetch in lib/api.ts.
+  const sent = (await searchParams).sent;
+  const formStatus = sent === "1" ? "sent" : sent === "0" ? "error" : undefined;
 
   const fonts = googleFontsHref(doc.theme);
 
@@ -115,7 +130,7 @@ export default async function SitePage({ params }: { params: Promise<RouteParams
       {/* The theme lives here as CSS variables — every section inherits it, which
           is why changing one token restyles the whole page. */}
       <main style={themeToCssVars(doc.theme)}>
-        <RenderSections sections={page.sections} doc={doc} />
+        <RenderSections sections={page.sections} doc={doc} siteSlug={siteSlug} formStatus={formStatus} />
       </main>
 
       {isDemo && (

@@ -11,6 +11,7 @@
 import type { ComponentType } from "react";
 import type { Section, SectionProps, SiteDoc } from "@/lib/types";
 
+import Header from "./Header";
 import Hero from "./Hero";
 import About from "./About";
 import Services from "./Services";
@@ -25,6 +26,7 @@ import Footer from "./Footer";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> = {
+  header: Header,
   hero: Hero,
   about: About,
   services: Services,
@@ -43,10 +45,25 @@ export function hasSection(type: string): boolean {
 }
 
 /**
+ * Request-scoped extras. These are NOT part of the document — they describe the
+ * current request — so the builder can render the very same components without
+ * them and still get a faithful preview.
+ */
+interface RenderContext {
+  siteSlug?: string;
+  formStatus?: "sent" | "error";
+}
+
+/**
  * Render one section. Unknown or hidden sections render nothing — a document
  * from a newer schema must degrade gracefully rather than crash the page.
  */
-export function RenderSection({ section, doc }: { section: Section; doc: SiteDoc }) {
+export function RenderSection({
+  section,
+  doc,
+  siteSlug,
+  formStatus,
+}: { section: Section; doc: SiteDoc } & RenderContext) {
   if (section.visible === false || section.style?.hidden) return null;
 
   const Comp = SECTION_REGISTRY[section.type];
@@ -57,15 +74,28 @@ export function RenderSection({ section, doc }: { section: Section; doc: SiteDoc
     return null;
   }
 
-  return <Comp section={section} props={section.props ?? {}} doc={doc} />;
+  return (
+    <Comp
+      section={section}
+      props={section.props ?? {}}
+      doc={doc}
+      siteSlug={siteSlug}
+      formStatus={formStatus}
+    />
+  );
 }
 
 /** Render a page's sections in document order (array order IS visual order). */
-export function RenderSections({ sections, doc }: { sections: Section[]; doc: SiteDoc }) {
+export function RenderSections({
+  sections,
+  doc,
+  siteSlug,
+  formStatus,
+}: { sections: Section[]; doc: SiteDoc } & RenderContext) {
   return (
     <>
       {sections.map((s) => (
-        <RenderSection key={s.id} section={s} doc={doc} />
+        <RenderSection key={s.id} section={s} doc={doc} siteSlug={siteSlug} formStatus={formStatus} />
       ))}
     </>
   );

@@ -16,7 +16,7 @@ import type { SectionManifest } from "./schema-types";
 import TopBar from "./TopBar";
 import SectionTree from "./SectionTree";
 import Canvas from "./Canvas";
-import Inspector from "./Inspector";
+import RightPanel from "./RightPanel";
 
 function ConflictDialog() {
   const conflict = useBuilder((s) => s.conflict);
@@ -92,7 +92,7 @@ export default function Editor({
         </main>
 
         <aside className="w-72 shrink-0 overflow-hidden border-l border-slate-200 bg-white">
-          <Inspector />
+          <RightPanel />
         </aside>
       </div>
 

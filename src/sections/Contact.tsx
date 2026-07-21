@@ -28,7 +28,7 @@ function embedMap(mapUrl?: string, address?: string): string | null {
   return `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
 }
 
-export default function Contact({ section, props, doc }: SectionProps<ContactProps>) {
+export default function Contact({ section, props, doc, siteSlug, formStatus }: SectionProps<ContactProps>) {
   const biz = doc.business ?? {};
   const variant = section.variant ?? "form-map";
   const form = doc.forms?.find((f) => f.id === props.formId) ?? doc.forms?.[0];
@@ -78,6 +78,28 @@ export default function Contact({ section, props, doc }: SectionProps<ContactPro
   );
 
   /**
+   * Outcome of a previous submission. The backend 303-redirects back here with
+   * ?sent=1|0, so the confirmation survives the full-page round trip and shows
+   * even with JavaScript disabled.
+   */
+  const banner = formStatus && (
+    <div
+      role="status"
+      className="mb-4 px-4 py-3 text-sm"
+      style={{
+        borderRadius: "var(--radius)",
+        border: `1px solid ${formStatus === "sent" ? "#86efac" : "#fca5a5"}`,
+        background: formStatus === "sent" ? "#f0fdf4" : "#fef2f2",
+        color: formStatus === "sent" ? "#166534" : "#991b1b",
+      }}
+    >
+      {formStatus === "sent"
+        ? form?.successMessage ?? "Thank you — your message has been sent."
+        : "Sorry, your message could not be sent. Please check the form and try again."}
+    </div>
+  );
+
+  /**
    * Posts straight to the backend. Progressive enhancement: this works with no
    * JavaScript; the builder can layer AJAX on later without changing the markup.
    */
@@ -88,7 +110,23 @@ export default function Contact({ section, props, doc }: SectionProps<ContactPro
       className="space-y-3"
       style={{ textAlign: "left" }}
     >
+      {banner}
       <input type="hidden" name="form_id" value={form.id} />
+      {/* Which site this submission belongs to. The document has no idea of its
+          own slug — it lives on the site row — so the renderer supplies it. */}
+      {siteSlug && <input type="hidden" name="site" value={siteSlug} />}
+
+      {/* Honeypot: hidden from people, irresistible to bots. The backend accepts
+          the post and stores nothing when this is filled in. Positioned off-screen
+          rather than display:none, which some bots skip. */}
+      <div
+        aria-hidden="true"
+        style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}
+      >
+        <label htmlFor={`${form.id}-hp`}>Leave this field empty</label>
+        <input id={`${form.id}-hp`} type="text" name="_hp" tabIndex={-1} autoComplete="off" />
+      </div>
+
       {form.fields.map((f) => (
         <div key={f.name}>
           <label htmlFor={f.name} className="mb-1 block text-xs font-semibold">
