@@ -3,10 +3,12 @@ import { mediaUrl } from "@/lib/api";
 import { SectionShell } from "./_shared";
 
 interface Col { title?: string; links?: { text?: string; href?: string }[] }
+interface SocialIcon { icon?: string; href?: string; label?: string }
 interface FooterProps {
   logo?: string;
   blurb?: string;
   showSocial?: boolean;
+  socialIcons?: SocialIcon[];
   showContact?: boolean;
   showHours?: boolean;
   columns?: Col[];
@@ -25,6 +27,7 @@ export default function Footer({ section, props, doc }: SectionProps<FooterProps
   const simple = section.variant === "simple";
 
   const socials = Object.entries(biz.social ?? {}).filter(([, url]) => !!url && String(url).trim() !== "");
+  const socialIcons = (props.socialIcons ?? []).filter((s) => s.icon && s.href);
 
   const brand = (
     <div>
@@ -47,6 +50,25 @@ export default function Footer({ section, props, doc }: SectionProps<FooterProps
               className="text-xs opacity-75 hover:opacity-100 hover:underline"
             >
               {SOCIAL_LABEL[k] ?? k}
+            </a>
+          ))}
+        </div>
+      )}
+
+      {!!socialIcons.length && (
+        <div className="mt-4 flex flex-wrap items-center gap-3" style={{ justifyContent: "inherit" }}>
+          {socialIcons.map((s, i) => (
+            <a
+              key={i}
+              href={s.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={s.label || "Social link"}
+              title={s.label || undefined}
+              className="inline-flex opacity-80 transition-opacity hover:opacity-100"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={mediaUrl(s.icon)} alt={s.label || ""} className="h-6 w-6 object-contain" />
             </a>
           ))}
         </div>
