@@ -1,6 +1,6 @@
 import type { SectionProps } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, SectionHeader } from "./_shared";
+import { SectionShell, SectionHeader, imageFitStyle } from "./_shared";
 import Carousel from "./Carousel";
 import Marquee from "./Marquee";
 
@@ -11,6 +11,7 @@ interface GalleryProps {
   sub?: string;
   images?: Img[];
   lightbox?: boolean;
+  imageFit?: string;
 }
 
 export default function Gallery({ section, props }: SectionProps<GalleryProps>) {
@@ -29,7 +30,8 @@ export default function Gallery({ section, props }: SectionProps<GalleryProps>) 
           src={src}
           alt={im.alt ?? ""}
           loading="lazy"
-          className="h-52 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="h-52 w-full transition-transform duration-500 group-hover:scale-105"
+          style={imageFitStyle(props.imageFit)}
         />
         {im.alt && (
           <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-left text-xs text-white">

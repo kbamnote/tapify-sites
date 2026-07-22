@@ -1,6 +1,6 @@
 import type { SectionProps } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, SectionHeader, Card } from "./_shared";
+import { SectionShell, SectionHeader, Card, imageFitStyle } from "./_shared";
 
 interface Pillar { icon?: string; title?: string; text?: string }
 interface AboutProps {
@@ -10,6 +10,7 @@ interface AboutProps {
   image?: string;
   showPillars?: boolean;
   pillars?: Pillar[];
+  imageFit?: string;
 }
 
 export default function About({ section, props }: SectionProps<AboutProps>) {
@@ -57,8 +58,8 @@ export default function About({ section, props }: SectionProps<AboutProps>) {
     <img
       src={img}
       alt={props.heading ?? "About"}
-      className="w-full object-cover"
-      style={{ borderRadius: "var(--radius)", maxHeight: 460 }}
+      className="w-full"
+      style={{ borderRadius: "var(--radius)", maxHeight: 460, ...imageFitStyle(props.imageFit) }}
       loading="lazy"
     />
   );

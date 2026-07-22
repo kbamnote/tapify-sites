@@ -1,6 +1,6 @@
 import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, SectionHeader, Card, CtaButton, GRID } from "./_shared";
+import { SectionShell, SectionHeader, Card, CtaButton, GRID, imageFitStyle } from "./_shared";
 import Carousel from "./Carousel";
 import Marquee from "./Marquee";
 
@@ -17,6 +17,7 @@ interface TeamProps {
   heading?: string;
   sub?: string;
   items?: Person[];
+  imageFit?: string;
 }
 
 export default function Team({ section, props }: SectionProps<TeamProps>) {
@@ -39,8 +40,8 @@ export default function Team({ section, props }: SectionProps<TeamProps>) {
             src={img}
             alt={p.name ?? ""}
             loading="lazy"
-            className={round ? "mx-auto h-28 w-28 object-cover" : "mx-auto h-40 w-full object-cover"}
-            style={{ borderRadius: round ? "999px" : "var(--radius)" }}
+            className={round ? "mx-auto h-28 w-28" : "mx-auto h-40 w-full"}
+            style={{ borderRadius: round ? "999px" : "var(--radius)", ...imageFitStyle(props.imageFit) }}
           />
         ) : (
           <div

@@ -107,7 +107,7 @@ function SelectField({ field, value, onChange }: FieldProps) {
       <option value="">—</option>
       {(field.options ?? []).map((o) => (
         <option key={o} value={o}>
-          {o}
+          {o.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
         </option>
       ))}
     </select>

@@ -1,6 +1,6 @@
 import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, SectionHeader, Card, CtaButton, GRID } from "./_shared";
+import { SectionShell, SectionHeader, Card, CtaButton, GRID, imageFitStyle } from "./_shared";
 import Carousel from "./Carousel";
 import Marquee from "./Marquee";
 
@@ -17,6 +17,7 @@ interface ServicesProps {
   heading?: string;
   sub?: string;
   items?: Item[];
+  imageFit?: string;
 }
 
 export default function Services({ section, props }: SectionProps<ServicesProps>) {
@@ -38,7 +39,7 @@ export default function Services({ section, props }: SectionProps<ServicesProps>
       <Card key={i} className="h-full">
         {showImages && img && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} alt={it.title ?? ""} className="h-44 w-full object-cover" loading="lazy" />
+          <img src={img} alt={it.title ?? ""} className="h-44 w-full" loading="lazy" style={imageFitStyle(props.imageFit)} />
         )}
         <div className="p-5">
           <h3 className="text-lg font-semibold" style={{ fontFamily: "var(--font-heading)" }}>

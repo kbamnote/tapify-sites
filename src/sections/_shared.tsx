@@ -217,3 +217,14 @@ export const GRID: Record<string, string> = {
   3: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6",
   4: "grid grid-cols-2 lg:grid-cols-4 gap-6",
 };
+
+/**
+ * How a photo fills its fixed-height frame — the "Image fit" section option.
+ * `top` keeps the top of the photo (portraits/faces), `contain` shows the whole
+ * image, `cover` (default) crops to fill.
+ */
+export function imageFitStyle(fit?: string): CSSProperties {
+  if (fit === "contain") return { objectFit: "contain", objectPosition: "center" };
+  if (fit === "top") return { objectFit: "cover", objectPosition: "top" };
+  return { objectFit: "cover", objectPosition: "center" };
+}
