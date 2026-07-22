@@ -15,7 +15,7 @@
  */
 
 import { create } from "zustand";
-import type { Section, SiteDoc, SectionStyle, ThemeTokens, Seo } from "@/lib/types";
+import type { Section, SiteDoc, SectionStyle, ThemeTokens, Seo, Business } from "@/lib/types";
 import type { SectionManifest } from "./schema-types";
 
 const HISTORY_LIMIT = 60;
@@ -40,7 +40,7 @@ interface BuilderState {
   pageId: string | null;
   selectedId: string | null;
   device: Device;
-  rightTab: "section" | "theme" | "pages" | "seo";
+  rightTab: "section" | "theme" | "pages" | "seo" | "business";
 
   saveState: SaveState;
   saveError: string | null;
@@ -56,7 +56,7 @@ interface BuilderState {
   selectPage(pageId: string): void;
   select(sectionId: string | null): void;
   setDevice(d: Device): void;
-  setRightTab(tab: "section" | "theme" | "pages" | "seo"): void;
+  setRightTab(tab: "section" | "theme" | "pages" | "seo" | "business"): void;
 
   // pages
   addPage(): void;
@@ -70,6 +70,7 @@ interface BuilderState {
   // SEO / site meta
   setPageSeo(pageId: string, patch: Partial<Seo>): void;
   setSiteMeta(patch: { name?: string; favicon?: string }): void;
+  patchBusiness(patch: Partial<Business>): void;
 
   // mutations
   setProp(sectionId: string, key: string, value: unknown): void;
@@ -393,6 +394,16 @@ export const useBuilder = create<BuilderState>((set, get) => {
         // site.name is required by the validator, so never let it become empty.
         if (patch.name !== undefined) doc.site.name = patch.name.trim() || doc.site.name;
         if (patch.favicon !== undefined) doc.site.favicon = patch.favicon || undefined;
+      });
+    },
+
+    patchBusiness(patch) {
+      // Site-wide business info (phone / email / social / opening hours) used by
+      // the Contact, Footer and Business-Hours sections. Callers pass complete
+      // nested objects (e.g. the full `social` map or `hours` array); this does a
+      // shallow merge onto doc.business.
+      mutate((doc) => {
+        doc.business = { ...(doc.business ?? {}), ...patch };
       });
     },
 
