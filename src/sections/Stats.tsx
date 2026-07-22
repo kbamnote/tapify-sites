@@ -1,5 +1,6 @@
 import type { SectionProps } from "@/lib/types";
 import { SectionShell, SectionHeader } from "./_shared";
+import CountUp from "./CountUp";
 
 interface Item { icon?: string; value?: number; suffix?: string; label?: string }
 interface StatsProps {
@@ -16,6 +17,7 @@ export default function Stats({ section, props }: SectionProps<StatsProps>) {
 
   const onDark = section.style?.bg === "primary" || section.style?.bg === "dark" || section.style?.bg === "image";
   const cols = items.length >= 4 ? "sm:grid-cols-4" : items.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
+  const count = props.countUp !== false;
 
   return (
     <SectionShell section={section}>
@@ -28,7 +30,7 @@ export default function Stats({ section, props }: SectionProps<StatsProps>) {
               className="text-3xl md:text-4xl font-bold tabular-nums"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              {(it.value ?? 0).toLocaleString("en-IN")}
+              {count ? <CountUp value={it.value ?? 0} /> : (it.value ?? 0).toLocaleString("en-IN")}
               <span style={{ color: onDark ? "inherit" : "var(--color-accent)" }}>{it.suffix}</span>
             </div>
             <p className="mt-1 text-sm" style={{ opacity: onDark ? 0.85 : 1, color: onDark ? "inherit" : "var(--color-muted)" }}>
