@@ -4,6 +4,7 @@ import { SectionShell, SectionHeader, Card, CtaButton, GRID, imageFitStyle } fro
 import Carousel from "./Carousel";
 import Marquee from "./Marquee";
 
+interface GalleryPhoto { image?: string; alt?: string }
 interface Item {
   image?: string;
   icon?: string;
@@ -11,6 +12,10 @@ interface Item {
   desc?: string;
   meta?: string;
   cta?: LinkT;
+  body?: string;
+  gallery?: GalleryPhoto[];
+  price?: string;
+  slug?: string;
 }
 interface ServicesProps {
   label?: string;
@@ -18,6 +23,12 @@ interface ServicesProps {
   sub?: string;
   items?: Item[];
   imageFit?: string;
+}
+
+/** URL-safe slug for an item: its slug field, else built from the title. */
+function itemSlug(it: Item): string {
+  const s = (it.slug || it.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return s || "service";
 }
 
 export default function Services({ section, props }: SectionProps<ServicesProps>) {
@@ -48,13 +59,24 @@ export default function Services({ section, props }: SectionProps<ServicesProps>
           {it.meta && (
             <p className="mt-1 text-xs font-semibold" style={{ color: "var(--color-accent)" }}>{it.meta}</p>
           )}
+          {it.price && (
+            <p className="mt-1.5 text-base font-bold" style={{ color: "var(--color-primary)" }}>{it.price}</p>
+          )}
           {it.desc && (
             <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>{it.desc}</p>
           )}
-          {it.cta?.text && (
+          {/* A service with a full description opens its own product-style page
+              (photo gallery + details) — that takes priority over a plain button. */}
+          {it.body?.trim() ? (
             <div className="mt-4">
-              <CtaButton link={{ ...it.cta, style: it.cta.style ?? "link" }} />
+              <CtaButton link={{ text: "View details", href: `/service/${itemSlug(it)}`, style: "link" }} />
             </div>
+          ) : (
+            it.cta?.text && (
+              <div className="mt-4">
+                <CtaButton link={{ ...it.cta, style: it.cta.style ?? "link" }} />
+              </div>
+            )
           )}
         </div>
       </Card>
