@@ -23,6 +23,11 @@ import Faq from "./Faq";
 import Cta from "./Cta";
 import Contact from "./Contact";
 import Footer from "./Footer";
+import BusinessHours from "./BusinessHours";
+import Blog from "./Blog";
+import Appointment from "./Appointment";
+import Embed from "./Embed";
+import Share from "./Share";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> = {
@@ -38,6 +43,11 @@ export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> 
   cta: Cta,
   contact: Contact,
   footer: Footer,
+  hours: BusinessHours,
+  blog: Blog,
+  appointment: Appointment,
+  embed: Embed,
+  share: Share,
 };
 
 export function hasSection(type: string): boolean {
