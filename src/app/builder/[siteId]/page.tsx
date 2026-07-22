@@ -31,7 +31,10 @@ export const metadata: Metadata = {
 
 async function getManifests(): Promise<SectionManifest[]> {
   try {
-    const res = await fetch(`${API_BASE}/sites/schema.php`, { next: { revalidate: 300 } });
+    // Always fetch the latest section library: the editor builds its whole UI
+    // from these manifests, so a new section/field must appear immediately after
+    // a backend deploy, not up to 5 minutes later. The payload is small.
+    const res = await fetch(`${API_BASE}/sites/schema.php`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     const bundle = (json?.data ?? json) as SchemaBundle;

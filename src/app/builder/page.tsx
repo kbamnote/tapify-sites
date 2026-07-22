@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 async function getIndustries(): Promise<IndustryRecipe[]> {
   try {
-    const res = await fetch(`${API_BASE}/sites/schema.php`, { next: { revalidate: 300 } });
+    const res = await fetch(`${API_BASE}/sites/schema.php`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     const bundle = (json?.data ?? json) as SchemaBundle;
