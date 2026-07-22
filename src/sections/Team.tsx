@@ -2,6 +2,7 @@ import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 import { SectionShell, SectionHeader, Card, CtaButton, GRID } from "./_shared";
 import Carousel from "./Carousel";
+import Marquee from "./Marquee";
 
 interface Person {
   photo?: string;
@@ -24,8 +25,9 @@ export default function Team({ section, props }: SectionProps<TeamProps>) {
   if (!items.length) return null;
 
   const isSlider = variant === "slider";
+  const isMarquee = variant === "marquee";
   const round = variant === "circles";
-  const cols = variant === "cards-4" ? GRID[4] : GRID[3];
+  const cols = variant === "cards-4" ? GRID[4] : variant === "cards-2" ? GRID[2] : GRID[3];
 
   const cards = items.map((p, i) => {
     const img = mediaUrl(p.photo);
@@ -76,7 +78,7 @@ export default function Team({ section, props }: SectionProps<TeamProps>) {
     <SectionShell section={section}>
       <SectionHeader label={props.label} heading={props.heading} sub={props.sub} />
 
-      {isSlider ? <Carousel slides={cards} /> : <div className={cols}>{cards}</div>}
+      {isMarquee ? <Marquee slides={cards} /> : isSlider ? <Carousel slides={cards} /> : <div className={cols}>{cards}</div>}
     </SectionShell>
   );
 }

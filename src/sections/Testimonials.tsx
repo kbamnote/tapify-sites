@@ -2,6 +2,7 @@ import type { SectionProps } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 import { SectionShell, SectionHeader, Card, GRID } from "./_shared";
 import Carousel from "./Carousel";
+import Marquee from "./Marquee";
 
 interface Review {
   quote?: string;
@@ -80,7 +81,9 @@ export default function Testimonials({ section, props }: SectionProps<Testimonia
     <SectionShell section={section}>
       <SectionHeader label={props.label} heading={props.heading} sub={props.sub} />
 
-      {variant === "slider" ? (
+      {variant === "marquee" ? (
+        <Marquee slides={cards} />
+      ) : variant === "slider" ? (
         <Carousel slides={cards} autoplayMs={props.autoplay === false ? 0 : 4000} />
       ) : (
         <div className={GRID[3]}>{cards}</div>

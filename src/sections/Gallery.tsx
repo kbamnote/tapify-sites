@@ -2,6 +2,7 @@ import type { SectionProps } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 import { SectionShell, SectionHeader } from "./_shared";
 import Carousel from "./Carousel";
+import Marquee from "./Marquee";
 
 interface Img { image?: string; alt?: string }
 interface GalleryProps {
@@ -53,7 +54,9 @@ export default function Gallery({ section, props }: SectionProps<GalleryProps>) 
     <SectionShell section={section}>
       <SectionHeader label={props.label} heading={props.heading} sub={props.sub} />
 
-      {variant === "slider" ? (
+      {variant === "marquee" ? (
+        <Marquee slides={slides} />
+      ) : variant === "slider" ? (
         <Carousel slides={slides} />
       ) : (
         <div className={`grid gap-4 ${cols}`}>{slides}</div>
