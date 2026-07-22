@@ -7,6 +7,8 @@ interface Post {
   title?: string;
   date?: string;
   excerpt?: string;
+  body?: string;
+  slug?: string;
   href?: string;
   linkText?: string;
 }
@@ -15,6 +17,12 @@ interface BlogProps {
   heading?: string;
   sub?: string;
   posts?: Post[];
+}
+
+/** URL-safe slug for a post: its slug field, else built from the title. */
+function postSlug(p: Post): string {
+  const s = (p.slug || p.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  return s || "post";
 }
 
 export default function Blog({ section, props }: SectionProps<BlogProps>) {
@@ -38,11 +46,25 @@ export default function Blog({ section, props }: SectionProps<BlogProps>) {
                 {b.date && <p className="mb-1.5 text-xs font-semibold" style={{ color: "var(--color-accent)" }}>{b.date}</p>}
                 <h3 className="text-lg font-semibold" style={{ fontFamily: "var(--font-heading)" }}>{b.title}</h3>
                 {b.excerpt && <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>{b.excerpt}</p>}
-                {b.href && (
-                  <a href={b.href} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block text-sm font-semibold underline" style={{ color: "var(--color-primary)" }}>
-                    {b.linkText || "Read more"}
-                  </a>
-                )}
+                {(() => {
+                  // A post with a full article opens its own page; otherwise fall
+                  // back to the external link if one was given.
+                  const hasBody = !!(b.body && b.body.trim());
+                  const href = hasBody ? `/post/${postSlug(b)}` : b.href;
+                  if (!href) return null;
+                  const external = !hasBody;
+                  return (
+                    <a
+                      href={href}
+                      target={external ? "_blank" : undefined}
+                      rel={external ? "noopener noreferrer" : undefined}
+                      className="mt-3 inline-block text-sm font-semibold underline"
+                      style={{ color: "var(--color-primary)" }}
+                    >
+                      {b.linkText || "Read more"}
+                    </a>
+                  );
+                })()}
               </div>
             </Card>
           );
