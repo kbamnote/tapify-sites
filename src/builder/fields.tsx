@@ -13,6 +13,7 @@ import { useRef, useState } from "react";
 import type { FieldDef } from "./schema-types";
 import { itemLabel } from "./schema-types";
 import type { Link as LinkT } from "@/lib/types";
+import HoursEditor from "./HoursEditor";
 import { useBuilder } from "./store";
 import { uploadMedia, mediaSrc, ApiError, NotSignedInError } from "./client-api";
 
@@ -383,6 +384,10 @@ export function Field({
         return <ListField field={field} value={value} onChange={onChange} />;
       case "repeater":
         return <RepeaterField field={field} value={value} onChange={onChange} variant={variant} />;
+      case "hours":
+        // Self-contained: edits the site-wide doc.business.hours via the store,
+        // so it ignores the section-prop value/onChange.
+        return <HoursEditor />;
       case "text":
         return <TextField field={field} value={value} onChange={onChange} />;
       default:

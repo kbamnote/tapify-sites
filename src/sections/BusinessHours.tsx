@@ -50,7 +50,7 @@ export default function BusinessHours({ section, props, doc }: SectionProps<Hour
           })}
         </ul>
       ) : (
-        <p className="text-sm opacity-60">Add your opening hours under Business Info.</p>
+        <p className="text-sm opacity-60">Set your opening hours in this section&rsquo;s settings.</p>
       )}
       {props.note && <p className="mt-4 text-[13px] opacity-70">{props.note}</p>}
     </SectionShell>

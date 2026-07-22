@@ -20,7 +20,8 @@ export type FieldType =
   | "icon"
   | "link"
   | "repeater"
-  | "list";
+  | "list"
+  | "hours";
 
 export interface FieldDef {
   key: string;
