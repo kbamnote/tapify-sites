@@ -9,6 +9,7 @@ interface FooterProps {
   blurb?: string;
   showSocial?: boolean;
   socialIcons?: SocialIcon[];
+  socialIconSize?: "small" | "medium" | "large" | "extra-large";
   showContact?: boolean;
   showHours?: boolean;
   columns?: Col[];
@@ -28,6 +29,7 @@ export default function Footer({ section, props, doc }: SectionProps<FooterProps
 
   const socials = Object.entries(biz.social ?? {}).filter(([, url]) => !!url && String(url).trim() !== "");
   const socialIcons = (props.socialIcons ?? []).filter((s) => s.icon && s.href);
+  const iconPx = ({ small: 28, medium: 36, large: 48, "extra-large": 64 } as const)[props.socialIconSize ?? "medium"] ?? 36;
 
   const brand = (
     <div>
@@ -68,7 +70,7 @@ export default function Footer({ section, props, doc }: SectionProps<FooterProps
               className="inline-flex opacity-80 transition-opacity hover:opacity-100"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={mediaUrl(s.icon)} alt={s.label || ""} className="h-6 w-6 object-contain" />
+              <img src={mediaUrl(s.icon)} alt={s.label || ""} className="object-contain" style={{ width: iconPx, height: iconPx }} />
             </a>
           ))}
         </div>
