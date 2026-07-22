@@ -68,3 +68,14 @@ summary {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Section entrance animations (fade / slide-up / zoom).
+   In the editor these play on mount so selecting one previews it immediately;
+   the published PHP page reveals them on scroll. reduced-motion is honoured by
+   the block above, which neutralises all animations. */
+@keyframes tf-fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes tf-slide-up { from { opacity: 0; transform: translateY(34px) } to { opacity: 1; transform: none } }
+@keyframes tf-zoom { from { opacity: 0; transform: scale(.93) } to { opacity: 1; transform: none } }
+.tf-anim-fade { animation: tf-fade .7s ease both }
+.tf-anim-slide-up { animation: tf-slide-up .7s ease both }
+.tf-anim-zoom { animation: tf-zoom .7s ease both }

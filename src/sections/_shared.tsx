@@ -59,12 +59,16 @@ export function SectionShell({
   const align =
     style.align === "center" ? "center" : style.align === "right" ? "right" : "left";
 
+  // Entrance animation (fade / slide-up / zoom). In the editor it plays on mount
+  // so picking one previews it; the published PHP page reveals on scroll.
+  const anim = style.animation && style.animation !== "none" ? `tf-anim-${style.animation}` : "";
+
   return (
     <section
       id={section.id}
       data-section-type={section.type}
       data-section-id={section.id}
-      className={`relative w-full overflow-hidden ${className}`}
+      className={`relative w-full overflow-hidden ${anim} ${className}`}
       style={{
         paddingTop: padY,
         paddingBottom: padY,
