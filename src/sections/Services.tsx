@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 import { SectionShell, SectionHeader, Card, CtaButton, GRID, imageFitStyle , type Crop} from "./_shared";
@@ -44,18 +45,33 @@ export default function Services({ section, props }: SectionProps<ServicesProps>
     variant === "cards-2" || variant === "list" ? GRID[2] : variant === "cards-4" ? GRID[4] : GRID[3];
   const showImages = variant !== "list";
 
+  const Open = ({ href, children }: { href: string; children: ReactNode }) =>
+    href ? (
+      <a href={href} className="block no-underline" style={{ color: "inherit" }}>{children}</a>
+    ) : (
+      <>{children}</>
+    );
+
   const cards = items.map((it, i) => {
     const img = mediaUrl(it.image);
+    // An item with a full description has its own product page. The photo and
+    // the title link straight to it — a separate "View details" button is one
+    // extra thing to notice for something the card already implies.
+    const href = it.body?.trim() ? `/service/${itemSlug(it)}` : "";
     return (
       <Card key={i} className="h-full">
         {showImages && img && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} alt={it.title ?? ""} className="h-44 w-full" loading="lazy" style={imageFitStyle(props.imageFit)} />
+          <Open href={href}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={img} alt={it.title ?? ""} className="h-44 w-full" loading="lazy" style={imageFitStyle(props.imageFit)} />
+          </Open>
         )}
         <div className="p-5">
-          <h3 className="text-lg font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
-            {it.title}
-          </h3>
+          <Open href={href}>
+            <h3 className="text-lg font-semibold" style={{ fontFamily: "var(--font-heading)" }}>
+              {it.title}
+            </h3>
+          </Open>
           {it.meta && (
             <p className="mt-1 text-xs font-semibold" style={{ color: "var(--color-accent)" }}>{it.meta}</p>
           )}
@@ -65,18 +81,12 @@ export default function Services({ section, props }: SectionProps<ServicesProps>
           {it.desc && (
             <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--tf-text,var(--color-muted))" }}>{it.desc}</p>
           )}
-          {/* A service with a full description opens its own product-style page
-              (photo gallery + details) — that takes priority over a plain button. */}
-          {it.body?.trim() ? (
+          {/* Items without a description have no page to open, so they keep
+              whatever custom button was configured. */}
+          {!href && it.cta?.text && (
             <div className="mt-4">
-              <CtaButton link={{ text: "View details", href: `/service/${itemSlug(it)}`, style: "link" }} />
+              <CtaButton link={{ ...it.cta, style: it.cta.style ?? "link" }} />
             </div>
-          ) : (
-            it.cta?.text && (
-              <div className="mt-4">
-                <CtaButton link={{ ...it.cta, style: it.cta.style ?? "link" }} />
-              </div>
-            )
           )}
         </div>
       </Card>
