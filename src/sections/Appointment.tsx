@@ -6,9 +6,21 @@ interface AppointmentProps {
   heading?: string;
   sub?: string;
   submitText?: string;
-  submitVia?: "whatsapp" | "email";
+  alsoNotify?: "whatsapp" | "email" | "none";
   services?: string[];
 }
+
+/** Half-hour slots in 12-hour AM/PM form — matches the published renderer. */
+const TIMES: string[] = (() => {
+  const out: string[] = [];
+  for (let h = 0; h < 24; h++) {
+    for (const m of [0, 30]) {
+      const ampm = h < 12 ? "AM" : "PM";
+      out.push(`${String((h % 12) || 12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${ampm}`);
+    }
+  }
+  return out;
+})();
 
 /**
  * Editor/preview render — a faithful static form. The live PHP renderer wires the
@@ -28,15 +40,23 @@ export default function Appointment({ section, props }: SectionProps<Appointment
       <form className="mx-auto grid max-w-md gap-3" style={{ textAlign: "left" }}>
         <div><label className={lbl}>Name *</label><input className={inputCls} style={inputStyle} /></div>
         <div><label className={lbl}>Phone *</label><input type="tel" className={inputCls} style={inputStyle} /></div>
+        <div><label className={lbl}>Email</label><input type="email" className={inputCls} style={inputStyle} /></div>
         <div className="grid grid-cols-2 gap-3">
-          <div><label className={lbl}>Preferred date</label><input type="date" className={inputCls} style={inputStyle} /></div>
-          <div><label className={lbl}>Preferred time</label><input type="time" className={inputCls} style={inputStyle} /></div>
+          <div><label className={lbl}>Date *</label><input type="date" className={inputCls} style={inputStyle} /></div>
+          <div>
+            <label className={lbl}>Time *</label>
+            <select className={inputCls} style={inputStyle}>
+              <option value="">Select a time…</option>
+              {TIMES.map((t) => <option key={t}>{t}</option>)}
+            </select>
+          </div>
         </div>
         {!!services.length && (
           <div>
-            <label className={lbl}>Service</label>
+            {/* Compulsory whenever services are configured. */}
+            <label className={lbl}>Service *</label>
             <select className={inputCls} style={inputStyle}>
-              <option value="">Select…</option>
+              <option value="">Select a service…</option>
               {services.map((s, i) => <option key={i}>{s}</option>)}
             </select>
           </div>
