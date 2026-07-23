@@ -38,10 +38,13 @@ export function SectionShell({
   section,
   children,
   className = "",
+  backdrop,
 }: {
   section: Section;
   children: ReactNode;
   className?: string;
+  /** Full-bleed layer rendered behind the content (e.g. a hero background video). */
+  backdrop?: ReactNode;
 }) {
   const style = section.style ?? {};
   const padY = PAD[style.paddingY ?? "lg"];
@@ -87,6 +90,7 @@ export function SectionShell({
           <div aria-hidden className="absolute inset-0" style={{ background: `rgba(2,6,23,${overlay})` }} />
         </>
       )}
+      {backdrop}
       <div
         className="relative mx-auto px-5 md:px-8"
         style={{ maxWidth: "var(--container)" }}

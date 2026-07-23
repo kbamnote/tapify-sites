@@ -11,7 +11,7 @@
  * click handler on the wrapper is enough (no per-section wiring).
  */
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useBuilder } from "./store";
 import { themeToCssVars, googleFontsHref } from "@/lib/theme";
 import { RenderSections } from "@/sections";
@@ -29,17 +29,37 @@ export default function Canvas() {
   const device = useBuilder((s) => s.device);
   const select = useBuilder((s) => s.select);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // Clicking a section on the canvas shouldn't scroll it — it's already in view.
+  const skipScroll = useRef(false);
+
   const onClick = useCallback(
     (e: React.MouseEvent) => {
       const el = (e.target as HTMLElement).closest("[data-section-id]");
       const id = el?.getAttribute("data-section-id");
       if (id) {
         e.preventDefault(); // don't follow links while editing
+        skipScroll.current = true;
         select(id);
       }
     },
     [select]
   );
+
+  // Selecting a section anywhere else (the tree, Add Section) brings it to the
+  // front of the canvas so you're always editing what you can see.
+  useEffect(() => {
+    if (!selectedId) return;
+    if (skipScroll.current) {
+      skipScroll.current = false;
+      return;
+    }
+    const root = scrollRef.current;
+    if (!root) return;
+    const sel = typeof CSS !== "undefined" && CSS.escape ? CSS.escape(selectedId) : selectedId;
+    const el = root.querySelector(`[data-section-id="${sel}"]`);
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selectedId]);
 
   if (!doc) return null;
   const page = doc.pages.find((p) => p.id === pageId) ?? doc.pages[0];
@@ -48,7 +68,7 @@ export default function Canvas() {
   const fonts = googleFontsHref(doc.theme);
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-100 p-4">
+    <div ref={scrollRef} className="h-full overflow-y-auto bg-slate-100 p-4">
       {fonts && <link rel="stylesheet" href={fonts} />}
 
       <div

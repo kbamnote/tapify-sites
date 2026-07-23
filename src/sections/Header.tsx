@@ -6,10 +6,16 @@ import { isDarkBg, CtaButton } from "./_shared";
 interface MenuLink { text?: string; href?: string }
 interface HeaderProps {
   logo?: string;
+  logoSize?: "small" | "medium" | "large" | "extra-large";
   links?: MenuLink[];
   cta?: LinkT;
+  showCart?: boolean;
+  cartHref?: string;
   sticky?: boolean;
 }
+
+/** Logo heights for the "Logo size" control. */
+const LOGO_PX: Record<string, number> = { small: 28, medium: 36, large: 48, "extra-large": 64 };
 
 /** Header background, mirroring _shared's bgStyles (which isn't exported). */
 function headerBg(bg: string | undefined): CSSProperties {
@@ -41,14 +47,36 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
   // share one mobile-menu checkbox.
   const toggleId = `nav-${section.id}`;
 
-  const brand = logo ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={logo} alt={doc.site.name} className="h-8 w-auto object-contain md:h-9" />
-  ) : (
-    <span className="text-lg font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-      {doc.site.name}
-    </span>
+  // Clicking the logo always returns to the home page.
+  const homeHref = doc.pages.find((p) => p.slug === "/")?.slug ?? "/";
+  const logoPx = LOGO_PX[props.logoSize ?? "medium"] ?? 36;
+
+  const brand = (
+    <a href={homeHref} aria-label={`${doc.site.name} — home`} className="inline-flex items-center no-underline" style={{ color: "inherit" }}>
+      {logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo} alt={doc.site.name} className="w-auto object-contain" style={{ height: logoPx }} />
+      ) : (
+        <span className="text-lg font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+          {doc.site.name}
+        </span>
+      )}
+    </a>
   );
+
+  const cartEl = props.showCart ? (
+    <a
+      href={props.cartHref || "/cart"}
+      aria-label="Cart"
+      className="inline-flex items-center justify-center rounded-md p-2 no-underline"
+      style={{ color: "inherit", border: "1px solid rgba(120,120,120,.28)" }}
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+      </svg>
+    </a>
+  ) : null;
 
   const desktopLinks = (
     <nav className="hidden items-center gap-6 md:flex">
@@ -82,16 +110,33 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
 
   // Desktop bar layout depends on the variant. Mobile is identical for all three.
   let bar: ReactNode;
-  if (variant === "center") {
+  if (variant === "nav-center") {
+    // Logo left · menu centered · button/cart right — the common shop layout.
+    bar = (
+      <div className="flex items-center justify-between gap-4 py-3">
+        <div className="flex shrink-0 items-center">{brand}</div>
+        <div className="hidden flex-1 justify-center md:flex">{desktopLinks}</div>
+        <div className="flex shrink-0 items-center gap-3">
+          {ctaEl}
+          {cartEl}
+          {burger}
+        </div>
+      </div>
+    );
+  } else if (variant === "center") {
     bar = (
       <div className="flex flex-col items-center gap-2 py-3">
         <div className="flex w-full items-center justify-between md:justify-center">
           {brand}
-          {burger}
+          <div className="flex items-center gap-3 md:hidden">
+            {cartEl}
+            {burger}
+          </div>
         </div>
         <div className="hidden w-full items-center justify-center gap-6 md:flex">
           {desktopLinks}
           {ctaEl}
+          {cartEl}
         </div>
       </div>
     );
@@ -103,7 +148,10 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
           {burger}
         </div>
         <div className="md:absolute md:left-1/2 md:-translate-x-1/2">{brand}</div>
-        {ctaEl ?? <span className="hidden md:block" />}
+        <div className="flex items-center gap-3">
+          {ctaEl}
+          {cartEl}
+        </div>
       </div>
     );
   } else {
@@ -114,6 +162,7 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         <div className="flex items-center gap-6">
           {desktopLinks}
           {ctaEl}
+          {cartEl}
           {burger}
         </div>
       </div>
