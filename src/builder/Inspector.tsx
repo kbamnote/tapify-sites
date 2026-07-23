@@ -23,6 +23,17 @@ const STYLE_CONTROLS: { key: keyof SectionStyle; label: string; options: string[
   { key: "animation", label: "Animation", options: ["none", "fade", "slide-up", "zoom"] },
 ];
 
+/**
+ * Colour overrides live outside STYLE_CONTROLS because they are free-form, not a
+ * fixed set of options. They exist for the cases the theme cannot cover — a
+ * heading that disappears against a background photo, or body copy that needs
+ * more contrast in one section only. Unset means "follow the theme".
+ */
+const COLOR_CONTROLS: { key: "headingColor" | "textColor"; label: string }[] = [
+  { key: "headingColor", label: "Heading colour" },
+  { key: "textColor", label: "Text colour" },
+];
+
 function Accordion({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -79,6 +90,7 @@ export default function Inspector() {
   const groups = groupFields(manifest.props);
   const supports = manifest.style?.supports ?? [];
   const styleControls = STYLE_CONTROLS.filter((c) => supports.includes(c.key as string));
+  const colorControls = COLOR_CONTROLS.filter((c) => supports.includes(c.key));
 
   return (
     <div className="flex h-full flex-col">
@@ -122,6 +134,7 @@ export default function Inspector() {
                   key={f.key}
                   field={f}
                   variant={section.variant}
+                  siblings={props}
                   value={props[f.key]}
                   onChange={(v) => setProp(section.id, f.key, v)}
                 />
@@ -131,8 +144,43 @@ export default function Inspector() {
         })}
 
         {/* Style — only the controls this section supports. */}
-        {!!styleControls.length && (
+        {(!!styleControls.length || !!colorControls.length) && (
           <Accordion title="Style">
+            {colorControls.map((c) => {
+              const current = section.style?.[c.key];
+              return (
+                <div key={c.key}>
+                  <label className="mb-1 block text-[11px] font-semibold text-slate-700">{c.label}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={current ?? "#111827"}
+                      onChange={(e) => setStyle(section.id, c.key, e.target.value)}
+                      className="h-7 w-10 cursor-pointer rounded border border-slate-300 bg-white p-0.5"
+                    />
+                    <input
+                      className="w-24 rounded border border-slate-300 px-1.5 py-1 text-[11px] tabular-nums"
+                      value={current ?? ""}
+                      placeholder="Theme"
+                      onChange={(e) => {
+                        const v = e.target.value.trim();
+                        setStyle(section.id, c.key, /^#[0-9a-fA-F]{3,8}$/.test(v) ? v : undefined);
+                      }}
+                    />
+                    {current && (
+                      <button
+                        type="button"
+                        onClick={() => setStyle(section.id, c.key, undefined)}
+                        className="rounded px-1.5 py-1 text-[10px] text-slate-500 hover:text-slate-900"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
             {styleControls.map((c) => (
               <div key={c.key as string}>
                 <label className="mb-1 block text-[11px] font-semibold text-slate-700">{c.label}</label>

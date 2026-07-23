@@ -11,13 +11,13 @@ import type { ReactNode } from "react";
  */
 export default function Marquee({
   slides,
-  secsPerSlide = 5,
+  secsPerSlide = 3,
 }: {
   slides: ReactNode[];
   secsPerSlide?: number;
 }) {
   if (!slides.length) return null;
-  const dur = Math.max(16, slides.length * secsPerSlide);
+  const dur = Math.max(10, slides.length * secsPerSlide);
 
   return (
     <div className="tf-mq-wrap">

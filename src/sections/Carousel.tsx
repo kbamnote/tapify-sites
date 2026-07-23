@@ -32,7 +32,8 @@ export default function Carousel({
       if (!track) return;
       const clamped = ((i % count) + count) % count;
       const slide = track.children[clamped] as HTMLElement | undefined;
-      if (slide) track.scrollTo({ left: slide.offsetLeft - track.offsetLeft, behavior: "smooth" });
+      // The track is `relative`, so offsetLeft is already the scroll offset.
+      if (slide) track.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
     },
     [count]
   );
@@ -85,7 +86,7 @@ export default function Carousel({
     >
       <div
         ref={trackRef}
-        className="flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="relative flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {slides.map((s, i) => (
           <div key={i} className="shrink-0 basis-[85%] snap-start sm:basis-[46%] lg:basis-[31%]">

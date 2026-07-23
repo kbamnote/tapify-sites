@@ -1,5 +1,6 @@
 import type { SectionProps } from "@/lib/types";
-import { SectionShell, SectionHeader, isDarkBg } from "./_shared";
+import { mediaUrl } from "@/lib/api";
+import { SectionShell, SectionHeader, isDarkBg, imageFitStyle , type Crop} from "./_shared";
 
 interface ShareProps {
   label?: string;
@@ -7,6 +8,9 @@ interface ShareProps {
   sub?: string;
   url?: string;
   showQr?: boolean;
+  qrImage?: string;
+  image?: string;
+  imageFit?: string | Crop;
   whatsapp?: boolean;
   facebook?: boolean;
   twitter?: boolean;
@@ -24,20 +28,18 @@ export default function Share({ section, props, doc, siteSlug }: SectionProps<Sh
   };
   const btnCls = "inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold no-underline";
 
-  return (
-    <SectionShell section={section}>
-      <SectionHeader label={props.label} heading={props.heading} sub={props.sub} light={light} />
+  // An uploaded QR wins; otherwise generate one from the link.
+  const qrSrc = mediaUrl(props.qrImage) || `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${enc}`;
+  const img = mediaUrl(props.image);
+  const split = (section.variant === "image-left" || section.variant === "image-right") && !!img;
+
+  const content = (
+    <>
       {props.showQr !== false && (
         <div className="mb-6">
           <div className="inline-block rounded-[var(--radius)] p-3.5" style={{ background: "#fff", boxShadow: "0 8px 24px rgba(16,24,40,.12)" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data=${enc}`}
-              alt="QR code"
-              width={200}
-              height={200}
-              style={{ display: "block" }}
-            />
+            <img src={qrSrc} alt="QR code" width={200} height={200} style={{ display: "block", width: 200, height: 200, objectFit: "contain" }} />
           </div>
         </div>
       )}
@@ -53,6 +55,34 @@ export default function Share({ section, props, doc, siteSlug }: SectionProps<Sh
         )}
         <span className={btnCls} style={btnStyle}>Copy link</span>
       </div>
+    </>
+  );
+
+  const image = img ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={img}
+      alt={props.heading ?? "Share"}
+      loading="lazy"
+      className="w-full"
+      style={{ borderRadius: "var(--radius)", maxHeight: 520, ...imageFitStyle(props.imageFit, "var(--radius)") }}
+    />
+  ) : null;
+
+  return (
+    <SectionShell section={section}>
+      <SectionHeader label={props.label} heading={props.heading} sub={props.sub} light={light} />
+      {split ? (
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
+          {section.variant === "image-left" ? (
+            <>{image}<div className="text-center">{content}</div></>
+          ) : (
+            <><div className="text-center">{content}</div>{image}</>
+          )}
+        </div>
+      ) : (
+        content
+      )}
     </SectionShell>
   );
 }

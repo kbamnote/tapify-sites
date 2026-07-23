@@ -33,7 +33,7 @@ export default function Stats({ section, props }: SectionProps<StatsProps>) {
               {count ? <CountUp value={it.value ?? 0} /> : (it.value ?? 0).toLocaleString("en-IN")}
               <span style={{ color: onDark ? "inherit" : "var(--color-accent)" }}>{it.suffix}</span>
             </div>
-            <p className="mt-1 text-sm" style={{ opacity: onDark ? 0.85 : 1, color: onDark ? "inherit" : "var(--color-muted)" }}>
+            <p className="mt-1 text-sm" style={{ opacity: onDark ? 0.85 : 1, color: onDark ? "inherit" : "var(--tf-text,var(--color-muted))" }}>
               {it.label}
             </p>
           </div>

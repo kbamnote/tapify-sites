@@ -1,6 +1,6 @@
 import type { SectionProps } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, SectionHeader, imageFitStyle } from "./_shared";
+import { SectionShell, SectionHeader, imageFitStyle , type Crop} from "./_shared";
 import Carousel from "./Carousel";
 import Marquee from "./Marquee";
 
@@ -11,7 +11,7 @@ interface GalleryProps {
   sub?: string;
   images?: Img[];
   lightbox?: boolean;
-  imageFit?: string;
+  imageFit?: string | Crop;
 }
 
 export default function Gallery({ section, props }: SectionProps<GalleryProps>) {

@@ -15,6 +15,7 @@ export type FieldType =
   | "number"
   | "toggle"
   | "select"
+  | "crop"
   | "color"
   | "media"
   | "icon"

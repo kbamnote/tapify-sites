@@ -14,6 +14,7 @@ import type { FieldDef } from "./schema-types";
 import { itemLabel } from "./schema-types";
 import type { Link as LinkT } from "@/lib/types";
 import HoursEditor from "./HoursEditor";
+import CropField from "./CropField";
 import { useBuilder } from "./store";
 import { uploadMedia, mediaSrc, ApiError, NotSignedInError } from "./client-api";
 
@@ -326,6 +327,7 @@ function RepeaterField({ field, value, onChange, variant }: FieldProps & { varia
                   key={sub.key}
                   field={sub}
                   variant={variant}
+                  siblings={item}
                   value={item[sub.key]}
                   onChange={(v) => update(i, { [sub.key]: v })}
                 />
@@ -358,7 +360,8 @@ export function Field({
   value,
   onChange,
   variant,
-}: FieldProps & { variant?: string }) {
+  siblings,
+}: FieldProps & { variant?: string; siblings?: Record<string, unknown> }) {
   const inline = field.type === "toggle";
 
   const control = (() => {
@@ -376,6 +379,10 @@ export function Field({
         return <ColorField field={field} value={value} onChange={onChange} />;
       case "media":
         return <MediaField field={field} value={value} onChange={onChange} />;
+      case "crop":
+        // Crops the image it sits beside, so it needs the sibling props to know
+        // which upload to preview.
+        return <CropField value={value} onChange={onChange} siblings={siblings} />;
       case "icon":
         return <TextField field={{ ...field, placeholder: field.placeholder ?? "lucide icon name" }} value={value} onChange={onChange} />;
       case "link":

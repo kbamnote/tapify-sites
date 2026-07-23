@@ -49,7 +49,7 @@ export default function Faq({ section, props }: SectionProps<FaqProps>) {
               </span>
             </summary>
             {it.a && (
-              <p className="whitespace-pre-line px-5 pb-4 text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>
+              <p className="whitespace-pre-line px-5 pb-4 text-sm leading-relaxed" style={{ color: "var(--tf-text,var(--color-muted))" }}>
                 {it.a}
               </p>
             )}

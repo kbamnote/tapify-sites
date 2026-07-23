@@ -38,6 +38,9 @@ export interface SectionStyle {
   bgMedia?: MediaRef;
   overlay?: number;
   radius?: "none" | "sm" | "md" | "lg" | "xl";
+  /** Per-section font colours, for when the theme's text colour reads wrong here. */
+  headingColor?: string;
+  textColor?: string;
   hidden?: boolean;
   animation?: "none" | "fade" | "slide-up" | "zoom";
 }

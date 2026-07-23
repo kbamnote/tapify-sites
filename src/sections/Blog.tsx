@@ -1,6 +1,8 @@
 import type { SectionProps } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 import { SectionShell, SectionHeader, Card, isDarkBg } from "./_shared";
+import Carousel from "./Carousel";
+import Marquee from "./Marquee";
 
 interface Post {
   image?: string;
@@ -28,13 +30,11 @@ function postSlug(p: Post): string {
 export default function Blog({ section, props }: SectionProps<BlogProps>) {
   const posts = (props.posts ?? []).filter((p) => p.title || p.image);
   if (!posts.length) return null;
-  const cols = section.variant === "grid-2" ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
+  const variant = section.variant ?? "grid-3";
+  const cols = variant === "grid-2" ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
 
-  return (
-    <SectionShell section={section}>
-      <SectionHeader label={props.label} heading={props.heading} sub={props.sub} light={isDarkBg(section.style)} />
-      <div className={`grid grid-cols-1 gap-6 ${cols}`} style={{ textAlign: "left" }}>
-        {posts.map((b, i) => {
+  // Built once so the grid, carousel and slider all reuse the same card.
+  const cards = posts.map((b, i) => {
           const img = mediaUrl(b.image);
           return (
             <Card key={i}>
@@ -45,7 +45,7 @@ export default function Blog({ section, props }: SectionProps<BlogProps>) {
               <div className="p-5">
                 {b.date && <p className="mb-1.5 text-xs font-semibold" style={{ color: "var(--color-accent)" }}>{b.date}</p>}
                 <h3 className="text-lg font-semibold" style={{ fontFamily: "var(--font-heading)" }}>{b.title}</h3>
-                {b.excerpt && <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>{b.excerpt}</p>}
+                {b.excerpt && <p className="mt-2 text-sm" style={{ color: "var(--tf-text,var(--color-muted))" }}>{b.excerpt}</p>}
                 {(() => {
                   // A post with a full article opens its own page; otherwise fall
                   // back to the external link if one was given.
@@ -67,9 +67,19 @@ export default function Blog({ section, props }: SectionProps<BlogProps>) {
                 })()}
               </div>
             </Card>
-          );
-        })}
-      </div>
+    );
+  });
+
+  return (
+    <SectionShell section={section}>
+      <SectionHeader label={props.label} heading={props.heading} sub={props.sub} light={isDarkBg(section.style)} />
+      {variant === "slider" ? (
+        <Marquee slides={cards} />
+      ) : variant === "carousel" ? (
+        <Carousel slides={cards} />
+      ) : (
+        <div className={`grid grid-cols-1 gap-6 ${cols}`} style={{ textAlign: "left" }}>{cards}</div>
+      )}
     </SectionShell>
   );
 }

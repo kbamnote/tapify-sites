@@ -1,6 +1,6 @@
 import type { SectionProps } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, SectionHeader, Card, imageFitStyle } from "./_shared";
+import { SectionShell, SectionHeader, Card, imageFitStyle , type Crop} from "./_shared";
 
 interface Pillar { icon?: string; title?: string; text?: string }
 interface AboutProps {
@@ -10,7 +10,7 @@ interface AboutProps {
   image?: string;
   showPillars?: boolean;
   pillars?: Pillar[];
-  imageFit?: string;
+  imageFit?: string | Crop;
 }
 
 export default function About({ section, props }: SectionProps<AboutProps>) {
@@ -22,7 +22,7 @@ export default function About({ section, props }: SectionProps<AboutProps>) {
     <div>
       <SectionHeader label={props.label} heading={props.heading} />
       {props.body && (
-        <p className="whitespace-pre-line text-base leading-relaxed" style={{ color: "var(--color-muted)" }}>
+        <p className="whitespace-pre-line text-base leading-relaxed" style={{ color: "var(--tf-text,var(--color-muted))" }}>
           {props.body}
         </p>
       )}
@@ -34,7 +34,7 @@ export default function About({ section, props }: SectionProps<AboutProps>) {
                 {p.title}
               </h3>
               {p.text && (
-                <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>
+                <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--tf-text,var(--color-muted))" }}>
                   {p.text}
                 </p>
               )}
@@ -59,7 +59,7 @@ export default function About({ section, props }: SectionProps<AboutProps>) {
       src={img}
       alt={props.heading ?? "About"}
       className="w-full"
-      style={{ borderRadius: "var(--radius)", maxHeight: 460, ...imageFitStyle(props.imageFit) }}
+      style={{ borderRadius: "var(--radius)", maxHeight: 460, ...imageFitStyle(props.imageFit, "var(--radius)") }}
       loading="lazy"
     />
   );

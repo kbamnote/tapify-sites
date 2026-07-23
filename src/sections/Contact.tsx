@@ -56,7 +56,7 @@ export default function Contact({ section, props, doc, siteSlug, formStatus }: S
               {r.value}
             </a>
           ) : (
-            <p className="text-sm" style={{ color: "var(--color-muted)" }}>{r.value}</p>
+            <p className="text-sm" style={{ color: "var(--tf-text,var(--color-muted))" }}>{r.value}</p>
           )}
         </div>
       ))}
@@ -64,7 +64,7 @@ export default function Contact({ section, props, doc, siteSlug, formStatus }: S
       {props.showHours && !!biz.hours?.length && (
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--color-accent)" }}>Hours</p>
-          <ul className="mt-1 space-y-0.5 text-sm" style={{ color: "var(--color-muted)" }}>
+          <ul className="mt-1 space-y-0.5 text-sm" style={{ color: "var(--tf-text,var(--color-muted))" }}>
             {biz.hours.map((h) => (
               <li key={h.day} className="flex justify-between gap-6">
                 <span>{DAY_LABEL[h.day] ?? h.day}</span>
@@ -179,7 +179,7 @@ export default function Contact({ section, props, doc, siteSlug, formStatus }: S
               {r.href ? (
                 <a href={r.href} className="mt-2 block text-sm hover:underline">{r.value}</a>
               ) : (
-                <p className="mt-2 text-sm" style={{ color: "var(--color-muted)" }}>{r.value}</p>
+                <p className="mt-2 text-sm" style={{ color: "var(--tf-text,var(--color-muted))" }}>{r.value}</p>
               )}
             </Card>
           ))}

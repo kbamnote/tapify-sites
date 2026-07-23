@@ -1,6 +1,6 @@
 import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, SectionHeader, Card, CtaButton, GRID, imageFitStyle } from "./_shared";
+import { SectionShell, SectionHeader, Card, CtaButton, GRID, imageFitStyle , type Crop} from "./_shared";
 import Carousel from "./Carousel";
 import Marquee from "./Marquee";
 
@@ -17,7 +17,7 @@ interface TeamProps {
   heading?: string;
   sub?: string;
   items?: Person[];
-  imageFit?: string;
+  imageFit?: string | Crop;
 }
 
 export default function Team({ section, props }: SectionProps<TeamProps>) {
@@ -41,13 +41,13 @@ export default function Team({ section, props }: SectionProps<TeamProps>) {
             alt={p.name ?? ""}
             loading="lazy"
             className={round ? "mx-auto h-28 w-28" : "mx-auto h-40 w-full"}
-            style={{ borderRadius: round ? "999px" : "var(--radius)", ...imageFitStyle(props.imageFit) }}
+            style={{ borderRadius: round ? "999px" : "var(--radius)", ...imageFitStyle(props.imageFit, round ? "999px" : "var(--radius)") }}
           />
         ) : (
           <div
             aria-hidden
             className="mx-auto flex h-28 w-28 items-center justify-center text-2xl font-bold"
-            style={{ borderRadius: "999px", background: "var(--color-surface)", color: "var(--color-muted)" }}
+            style={{ borderRadius: "999px", background: "var(--color-surface)", color: "var(--tf-text,var(--color-muted))" }}
           >
             {(p.name ?? "?").slice(0, 1)}
           </div>
@@ -59,12 +59,12 @@ export default function Team({ section, props }: SectionProps<TeamProps>) {
         )}
         {p.meta && (
           <p className="mt-2 inline-block px-3 py-1 text-xs"
-             style={{ background: "var(--color-surface)", color: "var(--color-muted)", borderRadius: "999px" }}>
+             style={{ background: "var(--color-surface)", color: "var(--tf-text,var(--color-muted))", borderRadius: "999px" }}>
             {p.meta}
           </p>
         )}
         {p.bio && (
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>{p.bio}</p>
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--tf-text,var(--color-muted))" }}>{p.bio}</p>
         )}
         {p.link?.text && (
           <div className="mt-3">

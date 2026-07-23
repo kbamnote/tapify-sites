@@ -1,6 +1,6 @@
 import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, SectionHeader, Card, CtaButton, GRID, imageFitStyle } from "./_shared";
+import { SectionShell, SectionHeader, Card, CtaButton, GRID, imageFitStyle , type Crop} from "./_shared";
 import Carousel from "./Carousel";
 import Marquee from "./Marquee";
 
@@ -22,7 +22,7 @@ interface ServicesProps {
   heading?: string;
   sub?: string;
   items?: Item[];
-  imageFit?: string;
+  imageFit?: string | Crop;
 }
 
 /** URL-safe slug for an item: its slug field, else built from the title. */
@@ -63,7 +63,7 @@ export default function Services({ section, props }: SectionProps<ServicesProps>
             <p className="mt-1.5 text-base font-bold" style={{ color: "var(--color-primary)" }}>{it.price}</p>
           )}
           {it.desc && (
-            <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>{it.desc}</p>
+            <p className="mt-2 text-sm leading-relaxed" style={{ color: "var(--tf-text,var(--color-muted))" }}>{it.desc}</p>
           )}
           {/* A service with a full description opens its own product-style page
               (photo gallery + details) — that takes priority over a plain button. */}

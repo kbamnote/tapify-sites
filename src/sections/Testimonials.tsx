@@ -50,7 +50,7 @@ export default function Testimonials({ section, props }: SectionProps<Testimonia
             )}
             <span>
               <span className="block text-sm font-semibold">{r.name}</span>
-              {r.role && <span className="block text-xs" style={{ color: "var(--color-muted)" }}>{r.role}</span>}
+              {r.role && <span className="block text-xs" style={{ color: "var(--tf-text,var(--color-muted))" }}>{r.role}</span>}
             </span>
           </figcaption>
         </figure>
@@ -61,7 +61,7 @@ export default function Testimonials({ section, props }: SectionProps<Testimonia
   const cards = items.map((r, i) => (
     <Card key={i} className="h-full p-6 text-left">
       <Stars n={r.rating ?? 5} />
-      <blockquote className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-muted)" }}>
+      <blockquote className="mt-3 text-sm leading-relaxed" style={{ color: "var(--tf-text,var(--color-muted))" }}>
         “{r.quote}”
       </blockquote>
       <div className="mt-5 flex items-center gap-3">
@@ -71,7 +71,7 @@ export default function Testimonials({ section, props }: SectionProps<Testimonia
         )}
         <div>
           <p className="text-sm font-semibold">{r.name}</p>
-          {r.role && <p className="text-xs" style={{ color: "var(--color-muted)" }}>{r.role}</p>}
+          {r.role && <p className="text-xs" style={{ color: "var(--tf-text,var(--color-muted))" }}>{r.role}</p>}
         </div>
       </div>
     </Card>

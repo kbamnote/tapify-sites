@@ -1,5 +1,6 @@
 import type { SectionProps } from "@/lib/types";
-import { SectionShell, SectionHeader, isDarkBg } from "./_shared";
+import { mediaUrl } from "@/lib/api";
+import { SectionShell, SectionHeader, isDarkBg, imageFitStyle , type Crop} from "./_shared";
 
 interface AppointmentProps {
   label?: string;
@@ -8,6 +9,8 @@ interface AppointmentProps {
   submitText?: string;
   alsoNotify?: "whatsapp" | "email" | "none";
   services?: string[];
+  image?: string;
+  imageFit?: string | Crop;
 }
 
 /** Half-hour slots in 12-hour AM/PM form — matches the published renderer. */
@@ -34,10 +37,12 @@ export default function Appointment({ section, props }: SectionProps<Appointment
   const inputStyle = { borderColor: "var(--color-border)", background: "var(--color-bg)", color: "var(--color-text)" };
   const lbl = "mb-1 block text-xs font-semibold";
 
-  return (
-    <SectionShell section={section}>
-      <SectionHeader label={props.label} heading={props.heading} sub={props.sub} light={light} />
-      <form className="mx-auto grid max-w-md gap-3" style={{ textAlign: "left" }}>
+  // Split layouts put a photo beside the form; the form then fills its column.
+  const img = mediaUrl(props.image);
+  const split = (section.variant === "image-left" || section.variant === "image-right") && !!img;
+
+  const form = (
+    <form className={`grid gap-3 ${split ? "" : "mx-auto max-w-md"}`} style={{ textAlign: "left" }}>
         <div><label className={lbl}>Name *</label><input className={inputCls} style={inputStyle} /></div>
         <div><label className={lbl}>Phone *</label><input type="tel" className={inputCls} style={inputStyle} /></div>
         <div><label className={lbl}>Email</label><input type="email" className={inputCls} style={inputStyle} /></div>
@@ -69,7 +74,34 @@ export default function Appointment({ section, props }: SectionProps<Appointment
         >
           {props.submitText || "Request appointment"}
         </button>
-      </form>
+    </form>
+  );
+
+  const image = img ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={img}
+      alt={props.heading ?? "Appointment"}
+      loading="lazy"
+      className="w-full"
+      style={{ borderRadius: "var(--radius)", maxHeight: 520, ...imageFitStyle(props.imageFit, "var(--radius)") }}
+    />
+  ) : null;
+
+  return (
+    <SectionShell section={section}>
+      <SectionHeader label={props.label} heading={props.heading} sub={props.sub} light={light} />
+      {split ? (
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2" style={{ textAlign: "left" }}>
+          {section.variant === "image-left" ? (
+            <>{image}<div>{form}</div></>
+          ) : (
+            <><div>{form}</div>{image}</>
+          )}
+        </div>
+      ) : (
+        form
+      )}
     </SectionShell>
   );
 }

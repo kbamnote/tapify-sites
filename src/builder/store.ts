@@ -216,7 +216,11 @@ export const useBuilder = create<BuilderState>((set, get) => {
     setStyle(sectionId, key, value) {
       mutate((doc) =>
         withSection(doc, get().pageId, sectionId, (s) => {
-          s.style = { ...(s.style ?? {}), [key]: value } as SectionStyle;
+          const next = { ...(s.style ?? {}), [key]: value } as SectionStyle;
+          // undefined means "follow the theme" — drop the key rather than
+          // persisting a null the schema would reject.
+          if (value === undefined) delete next[key];
+          s.style = next;
         })
       );
     },

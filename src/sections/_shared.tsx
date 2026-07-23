@@ -78,6 +78,10 @@ export function SectionShell({
         textAlign: align as CSSProperties["textAlign"],
         borderRadius: style.radius ? RADIUS[style.radius] : undefined,
         ...bgStyles(effective),
+        // Per-section font colours, as custom properties so every heading and
+        // paragraph inside picks them up — including the ones set inline.
+        ...(style.headingColor ? { ["--tf-heading" as string]: style.headingColor } : {}),
+        ...(style.textColor ? { ["--tf-text" as string]: style.textColor } : {}),
       }}
     >
       {bgImg && (
@@ -119,7 +123,7 @@ export function SectionHeader({
       {label && (
         <p
           className="mb-2 text-xs font-semibold uppercase tracking-[0.14em]"
-          style={{ color: light ? "rgba(255,255,255,.8)" : "var(--color-accent)" }}
+          style={{ color: light ? "var(--tf-text,rgba(255,255,255,.8))" : "var(--tf-text,var(--color-accent))" }}
         >
           {label}
         </p>
@@ -127,7 +131,7 @@ export function SectionHeader({
       {heading && (
         <h2
           className="text-3xl md:text-4xl font-bold leading-tight"
-          style={{ fontFamily: "var(--font-heading)" }}
+          style={{ fontFamily: "var(--font-heading)", color: "var(--tf-heading,inherit)" }}
         >
           {heading}
         </h2>
@@ -136,7 +140,7 @@ export function SectionHeader({
         <p
           className="mt-3 max-w-2xl text-base leading-relaxed"
           style={{
-            color: light ? "rgba(255,255,255,.85)" : "var(--color-muted)",
+            color: light ? "var(--tf-text,rgba(255,255,255,.85))" : "var(--tf-text,var(--color-muted))",
             marginInline: "var(--header-mi, 0)",
           }}
         >
@@ -223,12 +227,34 @@ export const GRID: Record<string, string> = {
 };
 
 /**
- * How a photo fills its fixed-height frame — the "Image fit" section option.
- * `top` keeps the top of the photo (portraits/faces), `contain` shows the whole
- * image, `cover` (default) crops to fill.
+ * How a photo sits inside its frame — the section's visual crop.
+ *
+ * Mirrors imgFit() in SiteRenderer.php. The value is either a legacy string
+ * ("cover"/"top"/"contain") from before the cropper existed, or {fit,x,y,zoom}
+ * written by the builder's crop tool. Zoom needs a transform, which paints
+ * outside the element box, so the paint is clipped back to that box.
  */
-export function imageFitStyle(fit?: string): CSSProperties {
-  if (fit === "contain") return { objectFit: "contain", objectPosition: "center" };
-  if (fit === "top") return { objectFit: "cover", objectPosition: "top" };
-  return { objectFit: "cover", objectPosition: "center" };
+export type Crop = { fit?: "cover" | "contain"; x?: number; y?: number; zoom?: number };
+
+export function imageFitStyle(fit?: string | Crop, radius = "0"): CSSProperties {
+  if (typeof fit !== "object" || fit === null) {
+    if (fit === "contain") return { objectFit: "contain", objectPosition: "center" };
+    if (fit === "top") return { objectFit: "cover", objectPosition: "top" };
+    return { objectFit: "cover", objectPosition: "center" };
+  }
+  if ((fit.fit ?? "cover") === "contain") return { objectFit: "contain", objectPosition: "center" };
+
+  const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
+  const x = clamp(Number(fit.x ?? 50), 0, 100);
+  const y = clamp(Number(fit.y ?? 50), 0, 100);
+  const z = clamp(Number(fit.zoom ?? 1), 1, 4);
+  const base: CSSProperties = { objectFit: "cover", objectPosition: `${x}% ${y}%` };
+  if (z <= 1.001) return base;
+  return {
+    ...base,
+    transform: `scale(${z})`,
+    transformOrigin: `${x}% ${y}%`,
+    clipPath: radius === "0" ? "inset(0)" : `inset(0 round ${radius})`,
+  };
 }
+
