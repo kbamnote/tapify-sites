@@ -4,7 +4,7 @@ import { SectionShell, SectionHeader, imageFitStyle , type Crop} from "./_shared
 import Carousel from "./Carousel";
 import Marquee from "./Marquee";
 
-interface Img { image?: string; alt?: string }
+interface Img { image?: string; alt?: string; fit?: string | Crop }
 interface GalleryProps {
   label?: string;
   heading?: string;
@@ -31,7 +31,7 @@ export default function Gallery({ section, props }: SectionProps<GalleryProps>) 
           alt={im.alt ?? ""}
           loading="lazy"
           className="h-52 w-full transition-transform duration-500 group-hover:scale-105"
-          style={imageFitStyle(props.imageFit)}
+          style={imageFitStyle(im.fit ?? props.imageFit)}
         />
         {im.alt && (
           <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-left text-xs text-white">

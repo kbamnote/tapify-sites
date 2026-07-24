@@ -1,5 +1,19 @@
-import type { SectionProps } from "@/lib/types";
+import type { SectionProps, SiteForm } from "@/lib/types";
 import { SectionShell, SectionHeader, Card } from "./_shared";
+
+/** Shown when the site has no custom form configured (there is no forms editor
+ *  yet). form-submit.php accepts this same "contact" form id + field set. */
+const DEFAULT_CONTACT_FORM: SiteForm = {
+  id: "contact",
+  submitText: "Send message",
+  successMessage: "Thank you — your message has been sent.",
+  fields: [
+    { name: "name", label: "Your name", type: "text", required: true },
+    { name: "phone", label: "Phone", type: "tel", required: true },
+    { name: "email", label: "Email", type: "email" },
+    { name: "message", label: "Message", type: "textarea" },
+  ],
+};
 
 interface ContactProps {
   label?: string;
@@ -31,7 +45,7 @@ function embedMap(mapUrl?: string, address?: string): string | null {
 export default function Contact({ section, props, doc, siteSlug, formStatus }: SectionProps<ContactProps>) {
   const biz = doc.business ?? {};
   const variant = section.variant ?? "form-map";
-  const form = doc.forms?.find((f) => f.id === props.formId) ?? doc.forms?.[0];
+  const form = doc.forms?.find((f) => f.id === props.formId) ?? doc.forms?.[0] ?? DEFAULT_CONTACT_FORM;
 
   const rows: { label: string; value: string; href?: string }[] = [];
   if (props.showPhone !== false && biz.phone) rows.push({ label: "Phone", value: biz.phone, href: `tel:${biz.phone}` });
@@ -136,13 +150,13 @@ export default function Contact({ section, props, doc, siteSlug, formStatus }: S
             <textarea
               id={f.name} name={f.name} required={f.required} placeholder={f.placeholder} rows={4}
               className="w-full px-3 py-2 text-sm"
-              style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius)", background: "var(--color-bg)" }}
+              style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius)", background: "var(--color-bg)", color: "var(--color-text)" }}
             />
           ) : f.type === "select" ? (
             <select
               id={f.name} name={f.name} required={f.required}
               className="w-full px-3 py-2 text-sm"
-              style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius)", background: "var(--color-bg)" }}
+              style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius)", background: "var(--color-bg)", color: "var(--color-text)" }}
             >
               {(f.options ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
@@ -150,7 +164,7 @@ export default function Contact({ section, props, doc, siteSlug, formStatus }: S
             <input
               id={f.name} name={f.name} type={f.type} required={f.required} placeholder={f.placeholder}
               className="w-full px-3 py-2 text-sm"
-              style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius)", background: "var(--color-bg)" }}
+              style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius)", background: "var(--color-bg)", color: "var(--color-text)" }}
             />
           )}
         </div>

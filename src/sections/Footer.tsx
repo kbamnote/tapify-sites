@@ -15,6 +15,9 @@ interface FooterProps {
   columns?: Col[];
   copyright?: string;
   showBranding?: boolean;
+  showLegal?: boolean;
+  privacyBody?: string;
+  termsBody?: string;
 }
 
 const SOCIAL_LABEL: Record<string, string> = {
@@ -120,6 +123,12 @@ export default function Footer({ section, props, doc }: SectionProps<FooterProps
         style={{ borderTop: "1px solid rgba(255,255,255,.15)" }}
       >
         <p>{copy}</p>
+        {props.showLegal !== false && (props.privacyBody?.trim() || props.termsBody?.trim()) && (
+          <p className="flex flex-wrap gap-4">
+            {props.privacyBody?.trim() && <a href="/privacy" className="underline">Privacy Policy</a>}
+            {props.termsBody?.trim() && <a href="/terms" className="underline">Terms &amp; Conditions</a>}
+          </p>
+        )}
         {props.showBranding !== false && (
           <p>
             Powered by{" "}
