@@ -23,12 +23,25 @@ export default function Account({ section, props, doc, siteSlug }: SectionProps<
   const [me, setMe] = useState<{ name: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [orders, setOrders] = useState<Array<{ id: number; item_title?: string; price?: string; quantity?: number; status?: string }>>([]);
+
+  async function loadOrders(token?: string) {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API}/sites/customer-orders.php`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ site: slug, token }),
+      });
+      const json = await res.json();
+      if (json?.success) setOrders(json.data.orders ?? []);
+    } catch {}
+  }
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(key);
-      if (raw) setMe(JSON.parse(raw));
+      if (raw) { const acc = JSON.parse(raw); setMe(acc); loadOrders(acc.token); }
     } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   const input: React.CSSProperties = {
@@ -61,6 +74,7 @@ export default function Account({ section, props, doc, siteSlug }: SectionProps<
       const acc = { name: json.data.name, email: json.data.email, token: json.data.token };
       try { localStorage.setItem(key, JSON.stringify(acc)); } catch {}
       setMe({ name: acc.name });
+      loadOrders(acc.token);
     } catch {
       setMsg("Connection error. Please try again.");
     }
@@ -88,6 +102,24 @@ export default function Account({ section, props, doc, siteSlug }: SectionProps<
           >
             Sign out
           </button>
+          <div className="mt-7 text-left">
+            <p className="mb-3 text-base font-bold">My Orders</p>
+            {orders.length === 0 ? (
+              <p className="text-sm" style={{ color: "var(--color-muted)" }}>No orders yet.</p>
+            ) : (
+              orders.map((o) => (
+                <div key={o.id} className="mb-2 rounded p-3" style={{ border: "1px solid var(--color-border)", borderRadius: "var(--radius)" }}>
+                  <div className="flex justify-between gap-2">
+                    <strong className="text-sm">{o.item_title || "Order"}</strong>
+                    <span className="text-xs" style={{ color: "var(--color-muted)" }}>#{o.id}</span>
+                  </div>
+                  <div className="mt-0.5 text-xs" style={{ color: "var(--color-muted)" }}>
+                    {o.price}{o.quantity && o.quantity > 1 ? ` × ${o.quantity}` : ""} · {o.status}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       ) : (
         <>

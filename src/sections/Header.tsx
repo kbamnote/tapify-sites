@@ -11,6 +11,8 @@ interface HeaderProps {
   cta?: LinkT;
   showCart?: boolean;
   cartHref?: string;
+  showAccount?: boolean;
+  accountHref?: string;
   sticky?: boolean;
 }
 
@@ -92,6 +94,22 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
     </a>
   ) : null;
 
+  // Login / Signup button. On the published site the cart is gated behind login
+  // (see the auth script in the PHP renderer); in the editor we simply show the
+  // button so the designer can see it.
+  const accountEl = props.showAccount ? (
+    <a
+      href={props.accountHref || "/account"}
+      className="inline-flex items-center gap-1.5 rounded-md px-4 py-2 text-sm font-semibold no-underline"
+      style={{ background: "var(--color-primary)", color: "var(--color-primary-fg)" }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+      </svg>
+      Login / Signup
+    </a>
+  ) : null;
+
   const desktopLinks = (
     <nav className="hidden items-center gap-6 md:flex">
       {items.map((l, i) => (
@@ -132,7 +150,7 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         <div className="hidden flex-1 justify-center md:flex">{desktopLinks}</div>
         <div className="flex shrink-0 items-center gap-3">
           {ctaEl}
-          {cartEl}
+          {accountEl}{cartEl}
           {burger}
         </div>
       </div>
@@ -143,14 +161,14 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         <div className="flex w-full items-center justify-between md:justify-center">
           {brand}
           <div className="flex items-center gap-3 md:hidden">
-            {cartEl}
+            {accountEl}{cartEl}
             {burger}
           </div>
         </div>
         <div className="hidden w-full items-center justify-center gap-6 md:flex">
           {desktopLinks}
           {ctaEl}
-          {cartEl}
+          {accountEl}{cartEl}
         </div>
       </div>
     );
@@ -164,7 +182,7 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         <div className="md:absolute md:left-1/2 md:-translate-x-1/2">{brand}</div>
         <div className="flex items-center gap-3">
           {ctaEl}
-          {cartEl}
+          {accountEl}{cartEl}
         </div>
       </div>
     );
@@ -176,7 +194,7 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         <div className="flex items-center gap-6">
           {desktopLinks}
           {ctaEl}
-          {cartEl}
+          {accountEl}{cartEl}
           {burger}
         </div>
       </div>
