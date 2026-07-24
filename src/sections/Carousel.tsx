@@ -25,12 +25,19 @@ export default function Carousel({
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = slides.length;
+  // Ignore the scroll handler briefly while our own smooth-scroll animates, so
+  // it can't overwrite the target index mid-flight. Without an explicit index,
+  // multi-card layouts (where the last card can't be scroll-centred) would stall
+  // "next" before the end and never wrap around to the first slide.
+  const lockUntil = useRef(0);
 
   const goTo = useCallback(
     (i: number) => {
       const track = trackRef.current;
       if (!track) return;
-      const clamped = ((i % count) + count) % count;
+      const clamped = ((i % count) + count) % count; // wrap: past last -> first, before first -> last
+      setActive(clamped);
+      lockUntil.current = Date.now() + 700;
       const slide = track.children[clamped] as HTMLElement | undefined;
       // The track is `relative`, so offsetLeft is already the scroll offset.
       if (slide) track.scrollTo({ left: slide.offsetLeft, behavior: "smooth" });
@@ -38,7 +45,7 @@ export default function Carousel({
     [count]
   );
 
-  // Keep the active dot in sync with the scroll position (works for swipe too).
+  // Keep the active dot in sync after a manual swipe (skipped during our own animation).
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
@@ -46,6 +53,7 @@ export default function Carousel({
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
+        if (Date.now() < lockUntil.current) return;
         const center = track.scrollLeft + track.clientWidth / 2;
         let best = 0;
         let bd = Infinity;
