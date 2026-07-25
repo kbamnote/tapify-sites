@@ -13,12 +13,15 @@ import { useCallback, useEffect, useState } from "react";
 import {
   listSites,
   createSite,
+  deleteSite,
+  listUsers,
   slugify,
   isValidSlug,
   NotSignedInError,
   ApiError,
   LOGIN_URL,
   type SiteSummary,
+  type UserSummary,
 } from "./client-api";
 import type { IndustryRecipe } from "./schema-types";
 
@@ -27,19 +30,38 @@ type Status = "loading" | "ready" | "signed-out" | "error";
 export default function SiteList({ industries }: { industries: IndustryRecipe[] }) {
   const [status, setStatus] = useState<Status>("loading");
   const [sites, setSites] = useState<SiteSummary[]>([]);
+  const [canCreate, setCanCreate] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setStatus("loading");
     setError(null);
     try {
-      setSites(await listSites());
+      const res = await listSites();
+      setSites(res.sites);
+      setCanCreate(res.canCreate);
+      setCanDelete(res.canDelete);
       setStatus("ready");
     } catch (e) {
       if (e instanceof NotSignedInError) return setStatus("signed-out");
       setError(e instanceof Error ? e.message : "Something went wrong");
       setStatus("error");
+    }
+  }, []);
+
+  const remove = useCallback(async (site: SiteSummary) => {
+    if (!window.confirm(`Delete "${site.name}" permanently? This cannot be undone.`)) return;
+    setDeletingId(site.id);
+    try {
+      await deleteSite(site.id);
+      setSites((prev) => prev.filter((s) => s.id !== site.id));
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Could not delete the website.");
+    } finally {
+      setDeletingId(null);
     }
   }, []);
 
@@ -111,36 +133,47 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
         <>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-              My websites {sites.length ? `(${sites.length})` : ""}
+              {canCreate ? "All websites" : "My website"} {sites.length ? `(${sites.length})` : ""}
             </h2>
-            <button
-              type="button"
-              onClick={() => setCreating(true)}
-              className="rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-slate-700"
-            >
-              + New website
-            </button>
+            {canCreate && (
+              <button
+                type="button"
+                onClick={() => setCreating(true)}
+                className="rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-slate-700"
+              >
+                + New website
+              </button>
+            )}
           </div>
 
           {!sites.length ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
-              <p className="text-sm font-semibold text-slate-800">No websites yet</p>
-              <p className="mt-1 text-xs text-slate-500">Create your first one — it takes about a minute.</p>
-              <button
-                type="button"
-                onClick={() => setCreating(true)}
-                className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700"
-              >
-                + New website
-              </button>
+              {canCreate ? (
+                <>
+                  <p className="text-sm font-semibold text-slate-800">No websites yet</p>
+                  <p className="mt-1 text-xs text-slate-500">Create one and assign it to a client — it takes about a minute.</p>
+                  <button
+                    type="button"
+                    onClick={() => setCreating(true)}
+                    className="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-700"
+                  >
+                    + New website
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-slate-800">No website assigned yet</p>
+                  <p className="mt-1 text-xs text-slate-500">Your website will appear here once our team sets it up for you.</p>
+                </>
+              )}
             </div>
           ) : (
             <ul className="space-y-2">
               {sites.map((s) => (
-                <li key={s.id}>
+                <li key={s.id} className="flex items-stretch gap-2">
                   <a
                     href={`/builder/${s.id}`}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 transition-colors hover:border-slate-900"
+                    className="flex flex-1 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 transition-colors hover:border-slate-900"
                   >
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold text-slate-900">{s.name}</span>
@@ -148,6 +181,11 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
                         {s.slug}.tapify.co.in
                         {s.industry ? ` · ${s.industry}` : ""}
                       </span>
+                      {(s.owner_name || s.owner_email) && (
+                        <span className="mt-0.5 block truncate text-[10px] text-slate-400">
+                          Client: {s.owner_name || s.owner_email}
+                        </span>
+                      )}
                     </span>
                     <span
                       className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
@@ -159,6 +197,17 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
                       {s.status === "published" ? "Live" : "Draft"}
                     </span>
                   </a>
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => void remove(s)}
+                      disabled={deletingId === s.id}
+                      title="Delete website"
+                      className="shrink-0 rounded-xl border border-rose-200 bg-white px-3 text-[11px] font-bold text-rose-600 hover:border-rose-400 disabled:opacity-40"
+                    >
+                      {deletingId === s.id ? "…" : "Delete"}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -211,6 +260,15 @@ function CreateForm({
   const [industry, setIndustry] = useState(industries[0]?.id ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserSummary[]>([]);
+  const [assignTo, setAssignTo] = useState<string>("");
+
+  // Load the client list for the "Assign to" picker (admin/staff only endpoint).
+  useEffect(() => {
+    listUsers()
+      .then((list) => setUsers(list.filter((u) => u.role !== "admin")))
+      .catch(() => setUsers([]));
+  }, []);
 
   // Keep the address in sync with the name until the user edits it themselves.
   const effectiveSlug = slugTouched ? slug : slugify(name);
@@ -226,6 +284,7 @@ function CreateForm({
         name: name.trim(),
         slug: effectiveSlug || undefined,
         industry: industry || undefined,
+        userId: assignTo ? Number(assignTo) : undefined,
       });
       onCreated(site);
     } catch (err) {
@@ -245,6 +304,28 @@ function CreateForm({
       <h2 className="text-sm font-bold text-slate-900">New website</h2>
 
       <div className="mt-4 space-y-3">
+        <div>
+          <label htmlFor="assignTo" className="mb-1 block text-[11px] font-semibold text-slate-700">
+            Assign to client
+          </label>
+          <select
+            id="assignTo"
+            value={assignTo}
+            onChange={(e) => setAssignTo(e.target.value)}
+            className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-xs outline-none focus:border-slate-900"
+          >
+            <option value="">— Keep for myself —</option>
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name || u.email}{u.email ? ` (${u.email})` : ""}{u.role !== "user" ? ` · ${u.role}` : ""}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-[10px] text-slate-500">
+            The client will be able to edit and view this website — but not create or delete any.
+          </p>
+        </div>
+
         <div>
           <label htmlFor="name" className="mb-1 block text-[11px] font-semibold text-slate-700">
             Business name *

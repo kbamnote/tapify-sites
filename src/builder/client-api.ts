@@ -77,17 +77,51 @@ export interface SiteSummary {
   status: string;
   published_at: string | null;
   updated_at: string;
+  // Present only in the admin/staff view.
+  owner_id?: number | null;
+  owner_name?: string | null;
+  owner_email?: string | null;
 }
 
-export function listSites() {
-  return request<{ sites: SiteSummary[] }>("/sites/list.php").then((d) => d.sites);
+export interface SiteListResult {
+  sites: SiteSummary[];
+  canCreate: boolean;   // admin + staff
+  canDelete: boolean;   // admin only
 }
 
-export function createSite(input: { name: string; slug?: string; industry?: string }) {
+export function listSites(): Promise<SiteListResult> {
+  return request<{ sites: SiteSummary[]; can_create?: boolean; can_delete?: boolean }>("/sites/list.php")
+    .then((d) => ({ sites: d.sites, canCreate: !!d.can_create, canDelete: !!d.can_delete }));
+}
+
+export interface UserSummary {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+/** Clients to assign a new site to (admin/staff only endpoint). */
+export function listUsers(): Promise<UserSummary[]> {
+  return request<{ users: Array<{ id: number; name: string; email: string; role: string }> }>("/admin/users/list.php")
+    .then((d) => (d.users ?? []).map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role })));
+}
+
+export function createSite(input: { name: string; slug?: string; industry?: string; userId?: number }) {
+  const body: Record<string, unknown> = { name: input.name, slug: input.slug, industry: input.industry };
+  if (input.userId) body.user_id = input.userId;
   return request<{ site: SiteSummary; rev: number; doc: SiteDoc }>("/sites/create.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteSite(siteId: number) {
+  return request<{ id: number }>("/sites/delete.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ site_id: siteId }),
   });
 }
 
