@@ -19,6 +19,8 @@ interface FeedbackProps {
   rows?: string[];
   columns?: string[];
   commentLabel?: string;
+  askName?: boolean;
+  askContact?: boolean;
 }
 
 const input: CSSProperties = {
@@ -69,6 +71,8 @@ export default function Feedback({ section, props }: SectionProps<FeedbackProps>
           {props.commentLabel || "Any comments, questions or suggestions?"}
         </label>
         <textarea rows={4} disabled style={{ ...input, resize: "none" }} />
+        {props.askName !== false && <input placeholder="Your name" style={input} disabled />}
+        {props.askContact !== false && <input placeholder="Contact number" style={input} disabled />}
         <button type="button" style={btn}>{props.submitText || "Send feedback"}</button>
       </div>
     );
