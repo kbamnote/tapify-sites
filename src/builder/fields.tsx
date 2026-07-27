@@ -147,6 +147,22 @@ function MediaField({ field, value, onChange }: FieldProps) {
 
   const preview = mediaSrc(v);
 
+  // Which file types this field accepts drives the picker's `accept` attribute —
+  // without this, a video field's picker would still only list images.
+  const kinds = field.accept && field.accept.length ? field.accept : ["image"];
+  const ACCEPT_MIME: Record<string, string> = {
+    image: "image/png,image/jpeg,image/gif,image/webp",
+    video: "video/mp4,video/webm,video/quicktime",
+    pdf: "application/pdf",
+  };
+  const acceptAttr = kinds.map((k) => ACCEPT_MIME[k] ?? "").filter(Boolean).join(",");
+  const isVideoOnly = kinds.includes("video") && !kinds.includes("image");
+  const dropLabel = isVideoOnly
+    ? "Drop a video here, or"
+    : kinds.includes("video")
+      ? "Drop an image or video here, or"
+      : "Drop an image here, or";
+
   async function upload(file: File) {
     setError(null);
     setBusy(true);
@@ -180,11 +196,15 @@ function MediaField({ field, value, onChange }: FieldProps) {
         }`}
       >
         {preview ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="" className="h-20 w-full rounded object-contain" />
+          isVideoOnly ? (
+            <video src={preview} className="h-20 w-full rounded object-contain" muted controls />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={preview} alt="" className="h-20 w-full rounded object-contain" />
+          )
         ) : (
           <span className="text-[11px] text-slate-500">
-            {busy ? "Uploading…" : "Drop an image here, or"}
+            {busy ? "Uploading…" : dropLabel}
           </span>
         )}
         <div className="flex items-center gap-2">
@@ -209,7 +229,7 @@ function MediaField({ field, value, onChange }: FieldProps) {
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/gif,image/webp"
+          accept={acceptAttr}
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
