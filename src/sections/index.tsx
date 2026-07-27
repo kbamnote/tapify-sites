@@ -15,6 +15,7 @@ import Header from "./Header";
 import Hero from "./Hero";
 import About from "./About";
 import Services from "./Services";
+import Products from "./Products";
 import Gallery from "./Gallery";
 import Stats from "./Stats";
 import Team from "./Team";
@@ -37,6 +38,7 @@ export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> 
   hero: Hero,
   about: About,
   services: Services,
+  products: Products,
   gallery: Gallery,
   stats: Stats,
   team: Team,
