@@ -29,6 +29,7 @@ import Appointment from "./Appointment";
 import Embed from "./Embed";
 import Share from "./Share";
 import Account from "./Account";
+import Feedback from "./Feedback";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> = {
@@ -50,6 +51,7 @@ export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> 
   embed: Embed,
   share: Share,
   account: Account,
+  feedback: Feedback,
 };
 
 export function hasSection(type: string): boolean {
