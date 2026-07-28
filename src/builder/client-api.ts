@@ -107,9 +107,21 @@ export function listUsers(): Promise<UserSummary[]> {
     .then((d) => (d.users ?? []).map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role })));
 }
 
-export function createSite(input: { name: string; slug?: string; industry?: string; userId?: number }) {
+export function createSite(input: {
+  name: string;
+  slug?: string;
+  industry?: string;
+  userId?: number;
+  /** Creates the client login alongside the site. An existing email is reused. */
+  customer?: { name?: string; email: string; password: string };
+}) {
   const body: Record<string, unknown> = { name: input.name, slug: input.slug, industry: input.industry };
   if (input.userId) body.user_id = input.userId;
+  if (input.customer) {
+    body.customer_name = input.customer.name ?? "";
+    body.customer_email = input.customer.email;
+    body.customer_password = input.customer.password;
+  }
   return request<{ site: SiteSummary; rev: number; doc: SiteDoc }>("/sites/create.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

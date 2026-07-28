@@ -27,6 +27,9 @@ import type { IndustryRecipe } from "./schema-types";
 
 type Status = "loading" | "ready" | "signed-out" | "error";
 
+/** Sentinel value in the "Assign to client" picker meaning "make a new login". */
+const NEW_CLIENT = "__new__";
+
 export default function SiteList({ industries }: { industries: IndustryRecipe[] }) {
   const [status, setStatus] = useState<Status>("loading");
   const [sites, setSites] = useState<SiteSummary[]>([]);
@@ -262,6 +265,12 @@ function CreateForm({
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [assignTo, setAssignTo] = useState<string>("");
+  // "__new__" swaps the client picker for the three login fields below, so an
+  // admin can create the customer account and the website in one step.
+  const creatingClient = assignTo === NEW_CLIENT;
+  const [custName, setCustName] = useState("");
+  const [custEmail, setCustEmail] = useState("");
+  const [custPassword, setCustPassword] = useState("");
 
   // Load the client list for the "Assign to" picker (admin/staff only endpoint).
   useEffect(() => {
@@ -277,6 +286,15 @@ function CreateForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return;
+
+    // Mirrors the vCard flow's rules so the customer can actually sign in.
+    const email = custEmail.trim();
+    if (creatingClient) {
+      if (!email) return setError("Customer login email is required.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Please enter a valid customer login email.");
+      if (custPassword.length < 6) return setError("Customer password must be at least 6 characters.");
+    }
+
     setBusy(true);
     setError(null);
     try {
@@ -284,7 +302,10 @@ function CreateForm({
         name: name.trim(),
         slug: effectiveSlug || undefined,
         industry: industry || undefined,
-        userId: assignTo ? Number(assignTo) : undefined,
+        userId: !creatingClient && assignTo ? Number(assignTo) : undefined,
+        customer: creatingClient
+          ? { name: custName.trim(), email, password: custPassword }
+          : undefined,
       });
       onCreated(site);
     } catch (err) {
@@ -315,6 +336,7 @@ function CreateForm({
             className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-xs outline-none focus:border-slate-900"
           >
             <option value="">— Keep for myself —</option>
+            <option value={NEW_CLIENT}>+ Create a new client…</option>
             {users.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.name || u.email}{u.email ? ` (${u.email})` : ""}{u.role !== "user" ? ` · ${u.role}` : ""}
@@ -325,6 +347,62 @@ function CreateForm({
             The client will be able to edit and view this website — but not create or delete any.
           </p>
         </div>
+
+        {creatingClient && (
+          <div className="rounded-lg border border-dashed border-violet-400 bg-violet-50/40 p-3">
+            <p className="text-[11px] font-bold text-violet-700">New client login</p>
+            <p className="mt-0.5 text-[10px] text-slate-600">
+              A customer account is created and this website is assigned to them. If the email already
+              belongs to a client, that account is used instead and its password is left unchanged.
+            </p>
+
+            <div className="mt-3 space-y-3">
+              <div>
+                <label htmlFor="custName" className="mb-1 block text-[11px] font-semibold text-slate-700">
+                  Customer Name
+                </label>
+                <input
+                  id="custName"
+                  value={custName}
+                  onChange={(e) => setCustName(e.target.value)}
+                  placeholder="Customer's Full Name"
+                  className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-xs outline-none focus:border-slate-900"
+                />
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="custEmail" className="mb-1 block text-[11px] font-semibold text-slate-700">
+                    Customer Login Email <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="custEmail"
+                    type="email"
+                    autoComplete="off"
+                    value={custEmail}
+                    onChange={(e) => setCustEmail(e.target.value)}
+                    placeholder="customer@example.com"
+                    className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-xs outline-none focus:border-slate-900"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="custPassword" className="mb-1 block text-[11px] font-semibold text-slate-700">
+                    Set Login Password <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    id="custPassword"
+                    type="text"
+                    autoComplete="off"
+                    value={custPassword}
+                    onChange={(e) => setCustPassword(e.target.value)}
+                    placeholder="Min 6 characters"
+                    className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-xs outline-none focus:border-slate-900"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div>
           <label htmlFor="name" className="mb-1 block text-[11px] font-semibold text-slate-700">
