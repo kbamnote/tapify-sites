@@ -79,3 +79,38 @@ summary {
 .tf-anim-fade { animation: tf-fade .7s ease both }
 .tf-anim-slide-up { animation: tf-slide-up .7s ease both }
 .tf-anim-zoom { animation: tf-zoom .7s ease both }
+
+/* Section vertical rhythm. Driven by a custom property rather than an inline
+   padding so the mobile breakpoint below can scale it — an inline padding-top
+   would outrank any media query. Must stay in sync with SiteRenderer::baseCss(). */
+.tf-section {
+  padding-top: calc(var(--tf-pad, 72px) * var(--space-scale));
+  padding-bottom: calc(var(--tf-pad, 72px) * var(--space-scale));
+}
+
+/* Full-screen hero. svh (not vh/dvh) is the stable choice on phones: vh is the
+   TALLEST state, so with the URL bar showing the hero overflows the screen and
+   the buttons fall below the fold; dvh resizes live and makes the video jump
+   while scrolling. */
+.tf-full {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  /* Desktop section padding (72-104px) is far too tall on a phone. */
+  .tf-section {
+    padding-top: calc(var(--tf-pad, 72px) * var(--space-scale) * .55);
+    padding-bottom: calc(var(--tf-pad, 72px) * var(--space-scale) * .55);
+  }
+  /* A 16:9 video covering a 375x800 portrait box has to crop ~80% of its width,
+     so the subject is lost. A shorter hero keeps much more of the frame visible. */
+  .tf-full { min-height: 78vh; min-height: 78svh }
+  .tf-hero-wrap { max-width: 100% }
+  /* Full-width stacked CTAs — side-by-side buttons get squeezed at 360px. */
+  .tf-btns { margin-top: 24px; gap: 10px }
+  .tf-btns > .tf-btn:not(.tf-btn-link) { flex: 1 1 100% }
+}

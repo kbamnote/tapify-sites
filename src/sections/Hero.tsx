@@ -98,8 +98,10 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
         : section;
   const onDark = isDarkBg(heroSection.style);
 
-  // Full-viewport hero, like a landing page: fill the screen and centre content.
-  const fullClass = props.fullHeight ? "min-h-dvh flex flex-col justify-center" : "";
+  // Full-viewport hero, like a landing page. The .tf-full rule in globals.css
+  // owns the height so the mobile breakpoint can shorten it (min-h-dvh here
+  // would be a fixed utility the breakpoint could not walk back).
+  const fullClass = props.fullHeight ? "tf-full" : "";
 
   const heading = (
     <h1
@@ -129,7 +131,12 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
         <p className="mt-4 max-w-2xl text-base md:text-lg leading-relaxed opacity-90">{props.sub}</p>
       )}
 
-      <div className="mt-8 flex flex-wrap gap-3" style={{ justifyContent: "inherit" }}>
+      {/* Buttons go full-width and stack on phones — side-by-side CTAs get
+          squeezed to a few characters at 360px. */}
+      <div
+        className="mt-6 flex flex-wrap gap-2.5 max-sm:[&>a:not(.tf-btn-link)]:flex-[1_1_100%] sm:mt-8 sm:gap-3"
+        style={{ justifyContent: "inherit" }}
+      >
         <CtaButton link={props.ctaPrimary} onDark={onDark} />
         <CtaButton link={props.ctaSecondary} fallbackStyle="ghost" onDark={onDark} />
         {props.showWhatsapp && biz.whatsapp && (

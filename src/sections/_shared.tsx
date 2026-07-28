@@ -11,12 +11,14 @@ import type { CSSProperties, ReactNode } from "react";
 import type { Link as LinkT, Section, SectionStyle } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 
+/** Raw base padding. The .tf-section rule multiplies by --space-scale and
+ *  scales it back at the mobile breakpoint, so it must NOT be pre-multiplied. */
 const PAD: Record<NonNullable<SectionStyle["paddingY"]>, string> = {
-  none: "0",
-  sm: "calc(28px * var(--space-scale))",
-  md: "calc(48px * var(--space-scale))",
-  lg: "calc(72px * var(--space-scale))",
-  xl: "calc(104px * var(--space-scale))",
+  none: "0px",
+  sm: "28px",
+  md: "48px",
+  lg: "72px",
+  xl: "104px",
 };
 
 const RADIUS: Record<NonNullable<SectionStyle["radius"]>, string> = {
@@ -71,10 +73,12 @@ export function SectionShell({
       id={section.id}
       data-section-type={section.type}
       data-section-id={section.id}
-      className={`relative w-full overflow-hidden ${anim} ${className}`}
+      className={`tf-section relative w-full overflow-hidden ${anim} ${className}`}
       style={{
-        paddingTop: padY,
-        paddingBottom: padY,
+        // Padding comes from the .tf-section rule in globals.css reading this
+        // property — an inline padding could not be scaled down at the mobile
+        // breakpoint, since inline styles outrank media queries.
+        ["--tf-pad" as string]: padY,
         textAlign: align as CSSProperties["textAlign"],
         borderRadius: style.radius ? RADIUS[style.radius] : undefined,
         ...bgStyles(effective),
@@ -194,7 +198,9 @@ export function CtaButton({
       href={link.href}
       target={link.newTab ? "_blank" : undefined}
       rel={link.newTab ? "noopener noreferrer" : undefined}
-      className={base}
+      // tf-btn-link marks the underlined text variant so responsive rules can
+      // exclude it from full-width button stacking (matches SiteRenderer::btn).
+      className={variant === "link" ? `${base} tf-btn-link` : base}
       style={styles[variant]}
     >
       {link.text}
