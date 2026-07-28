@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 import { SectionShell, CtaButton, isDarkBg } from "./_shared";
@@ -38,6 +41,33 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
   const fileVideo = uploaded || (linked && !embed ? linked : null);
   const hasVideo = !!(fileVideo || embed);
 
+  // <iframe> content isn't a replaced element, so object-fit doesn't work on it.
+  // This measures the ACTUAL backdrop box (any height — not just a full-viewport
+  // hero) and sizes the embed in pixels to cover it, keyed to 16:9. Fixes the old
+  // width:177.78vh hack, which sized off the viewport instead of the section and
+  // broke badly on phones (short/non-fullHeight heroes, dynamic browser-chrome vh).
+  const embedRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => {
+    const frame = embedRef.current;
+    const wrap = frame?.parentElement;
+    if (!frame || !wrap) return;
+    const ar = 16 / 9;
+    const fit = () => {
+      const w = wrap.clientWidth, h = wrap.clientHeight;
+      const [fw, fh] = w / h > ar ? [w * 1.1, (w * 1.1) / ar] : [h * 1.1 * ar, h * 1.1];
+      frame.style.width = `${fw}px`;
+      frame.style.height = `${fh}px`;
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(fit) : null;
+    ro?.observe(wrap);
+    return () => {
+      window.removeEventListener("resize", fit);
+      ro?.disconnect();
+    };
+  }, [embed, fileVideo, variant]);
+
   /** The video layer used as a hero background (behind the copy). */
   const videoBg = hasVideo ? (
     <div aria-hidden className="absolute inset-0 overflow-hidden">
@@ -45,9 +75,10 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
         <video src={fileVideo} autoPlay muted loop playsInline className="h-full w-full object-cover" />
       ) : (
         <iframe
+          ref={embedRef}
           src={embed!}
           allow="autoplay; encrypted-media; picture-in-picture"
-          className="absolute left-1/2 top-1/2 h-[110%] w-[177.78vh] min-w-[110%] -translate-x-1/2 -translate-y-1/2 border-0"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 border-0"
           title={props.heading ?? doc.site.name}
         />
       )}
