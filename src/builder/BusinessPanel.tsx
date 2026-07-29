@@ -114,7 +114,7 @@ function MobileBarSection() {
             <div>
               <span className="text-[12px] font-semibold text-slate-800">Show mobile action bar</span>
               <p className="text-[10px] leading-snug text-slate-500">
-                Sticky bottom bar on phones with WhatsApp, Save Contact, Bookmark &amp; Location buttons.
+                Sticky bottom bar on phones with WhatsApp, Add to Contacts, Share, Add to Home Screen &amp; Location buttons.
                 Uses your business info above.
               </p>
             </div>
