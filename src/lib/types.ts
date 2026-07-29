@@ -128,6 +128,11 @@ export interface SiteDoc {
   pages: Page[];
   business?: Business;
   forms?: SiteForm[];
+  settings?: SiteSettings;
+}
+
+export interface SiteSettings {
+  showMobileActionBar?: boolean;
 }
 
 /** Shape returned by api/sites/get.php */

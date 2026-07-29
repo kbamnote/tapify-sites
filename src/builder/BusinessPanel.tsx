@@ -9,6 +9,7 @@
  * shares the same undo / autosave path as the rest of the editor.
  */
 
+import { useState } from "react";
 import { useBuilder } from "./store";
 import type { Business } from "@/lib/types";
 import HoursEditor from "./HoursEditor";
@@ -75,6 +76,51 @@ export default function BusinessPanel() {
           Add a “Business Hours” section to a page to display these.
         </p>
       </div>
+
+      {/* Mobile Action Bar */}
+      <MobileBarSection />
+    </div>
+  );
+}
+
+/* ----------------------------------------------------------------- mobile bar */
+
+function MobileBarSection() {
+  const settings = useBuilder((s) => s.doc?.settings);
+  const patchSettings = useBuilder((s) => s.patchSettings);
+  const [open, setOpen] = useState(false);
+
+  const showBar = settings?.showMobileActionBar ?? false;
+
+  return (
+    <div className="border-b border-slate-200">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between px-3 py-2.5 text-left"
+      >
+        <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Mobile Action Bar</span>
+        <span className={`text-slate-400 transition-transform ${open ? "rotate-45" : ""}`}>+</span>
+      </button>
+      {open && (
+        <div className="space-y-3 px-3 pb-4">
+          <label className="flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={showBar}
+              onChange={(e) => patchSettings({ showMobileActionBar: e.target.checked })}
+              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+            />
+            <div>
+              <span className="text-[12px] font-semibold text-slate-800">Show mobile action bar</span>
+              <p className="text-[10px] leading-snug text-slate-500">
+                Sticky bottom bar on phones with WhatsApp, Save Contact, Bookmark &amp; Location buttons.
+                Uses your business info above.
+              </p>
+            </div>
+          </label>
+        </div>
+      )}
     </div>
   );
 }

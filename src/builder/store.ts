@@ -15,7 +15,7 @@
  */
 
 import { create } from "zustand";
-import type { Section, SiteDoc, SectionStyle, ThemeTokens, Seo, Business } from "@/lib/types";
+import type { Section, SiteDoc, SectionStyle, ThemeTokens, Seo, Business, SiteSettings } from "@/lib/types";
 import type { SectionManifest } from "./schema-types";
 
 const HISTORY_LIMIT = 60;
@@ -86,6 +86,9 @@ interface BuilderState {
   setThemeToken(key: "radius" | "spacing" | "container" | "mode", value: string): void;
   /** Merge a partial theme (e.g. a preset) in ONE history/save step. */
   applyTheme(patch: Partial<ThemeTokens>): void;
+
+  /** Site-wide settings (mobile bar, feature toggles). */
+  patchSettings(patch: Partial<SiteSettings>): void;
 
   // history + save
   undo(): void;
@@ -408,6 +411,12 @@ export const useBuilder = create<BuilderState>((set, get) => {
       // shallow merge onto doc.business.
       mutate((doc) => {
         doc.business = { ...(doc.business ?? {}), ...patch };
+      });
+    },
+
+    patchSettings(patch) {
+      mutate((doc) => {
+        doc.settings = { ...(doc.settings ?? {}), ...patch };
       });
     },
 
