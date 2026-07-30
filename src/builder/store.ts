@@ -168,6 +168,27 @@ export const useBuilder = create<BuilderState>((set, get) => {
     fn(page.sections[i], page.sections, i);
   }
 
+  /**
+   * Apply a mutation to ALL footer sections across every page.
+   * Used so that editing the footer on one page updates it site-wide.
+   * Only syncs when the source section is of type "footer".
+   */
+  function syncFooterMutation(doc: SiteDoc, pageId: string | null, sectionId: string, fn: (s: Section) => void) {
+    const page = doc.pages.find((p) => p.id === pageId) ?? doc.pages[0];
+    if (!page) return;
+    const source = page.sections.find((s) => s.id === sectionId);
+    if (!source || source.type !== "footer") return;
+
+    // Apply the mutation to every footer section across all pages
+    for (const p of doc.pages) {
+      for (const s of p.sections) {
+        if (s.type === "footer" && s.id !== sectionId) {
+          fn(s);
+        }
+      }
+    }
+  }
+
   return {
     siteId: null,
     slug: null,
@@ -209,27 +230,39 @@ export const useBuilder = create<BuilderState>((set, get) => {
     setRightTab: (rightTab) => set({ rightTab }),
 
     setProp(sectionId, key, value) {
-      mutate((doc) =>
+      mutate((doc) => {
         withSection(doc, get().pageId, sectionId, (s) => {
           s.props = { ...(s.props ?? {}), [key]: value };
-        })
-      );
+        });
+        // Footer edits apply site-wide — sync to all pages.
+        syncFooterMutation(doc, get().pageId, sectionId, (s) => {
+          s.props = { ...(s.props ?? {}), [key]: value };
+        });
+      });
     },
 
     setStyle(sectionId, key, value) {
-      mutate((doc) =>
+      mutate((doc) => {
         withSection(doc, get().pageId, sectionId, (s) => {
           const next = { ...(s.style ?? {}), [key]: value } as SectionStyle;
           // undefined means "follow the theme" — drop the key rather than
           // persisting a null the schema would reject.
           if (value === undefined) delete next[key];
           s.style = next;
-        })
-      );
+        });
+        syncFooterMutation(doc, get().pageId, sectionId, (s) => {
+          const next = { ...(s.style ?? {}), [key]: value } as SectionStyle;
+          if (value === undefined) delete next[key];
+          s.style = next;
+        });
+      });
     },
 
     setVariant(sectionId, variant) {
-      mutate((doc) => withSection(doc, get().pageId, sectionId, (s) => { s.variant = variant; }));
+      mutate((doc) => {
+        withSection(doc, get().pageId, sectionId, (s) => { s.variant = variant; });
+        syncFooterMutation(doc, get().pageId, sectionId, (s) => { s.variant = variant; });
+      });
     },
 
     toggleVisible(sectionId) {

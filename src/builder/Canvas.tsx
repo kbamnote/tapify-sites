@@ -14,7 +14,8 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useBuilder } from "./store";
 import { themeToCssVars, googleFontsHref } from "@/lib/theme";
-import { RenderSections } from "@/sections";
+import { RenderSections, RenderSection } from "@/sections";
+import { findGlobalSection } from "@/lib/api";
 
 const DEVICE_WIDTH: Record<string, string> = {
   desktop: "100%",
@@ -87,6 +88,13 @@ export default function Canvas() {
           className="[&_[data-section-id]]:relative [&_[data-section-id]:hover]:outline [&_[data-section-id]:hover]:outline-2 [&_[data-section-id]:hover]:-outline-offset-2 [&_[data-section-id]:hover]:outline-slate-900/25"
         >
           <RenderSections sections={page.sections} doc={doc} />
+          {/* If this page has no footer, show the site-wide footer so the
+              canvas matches the published site. Footer edits sync across
+              all pages, so any footer found is representative. */}
+          {!page.sections.some((s) => s.type === "footer") && (() => {
+            const gf = findGlobalSection(doc, "footer");
+            return gf ? <RenderSection section={gf} doc={doc} /> : null;
+          })()}
         </div>
 
         {!page.sections.length && (

@@ -92,6 +92,22 @@ export function findPage(doc: SiteDoc, path: string) {
 }
 
 /**
+ * Find the first visible section of a given type across ALL pages in the site.
+ * Used for site-wide sections like footer that should render the same on every page.
+ * Returns null when no visible section of that type exists anywhere.
+ */
+export function findGlobalSection(doc: SiteDoc, type: string) {
+  for (const page of doc.pages) {
+    for (const section of page.sections) {
+      if (section.type === type && section.visible !== false && !section.style?.hidden) {
+        return section;
+      }
+    }
+  }
+  return null;
+}
+
+/**
  * Resolve a media reference to a URL.
  * Documents store "media:<id>" so files can be replaced/moved without ever
  * rewriting the document. Absolute URLs and /paths pass through untouched.

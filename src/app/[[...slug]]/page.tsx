@@ -3,9 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 import type { SiteDoc } from "@/lib/types";
-import { getPublishedSite, slugFromHost, findPage, mediaUrl } from "@/lib/api";
+import { getPublishedSite, slugFromHost, findPage, mediaUrl, findGlobalSection } from "@/lib/api";
 import { themeToCssVars, googleFontsHref } from "@/lib/theme";
-import { RenderSections } from "@/sections";
+import { RenderSections, RenderSection } from "@/sections";
 import demoSite from "@/lib/demo-site.json";
 
 /**
@@ -129,8 +129,16 @@ export default async function SitePage({
 
       {/* The theme lives here as CSS variables — every section inherits it, which
           is why changing one token restyles the whole page. */}
+      {/* If the page has no footer, render one from another page so the
+          footer always appears site-wide (the builder syncs footer edits
+          across pages, so any footer found is representative). */}
       <main style={themeToCssVars(doc.theme)}>
         <RenderSections sections={page.sections} doc={doc} siteSlug={siteSlug} formStatus={formStatus} />
+        {!page.sections.some((s) => s.type === "footer") &&
+          (() => {
+            const gf = findGlobalSection(doc, "footer");
+            return gf ? <RenderSection section={gf} doc={doc} siteSlug={siteSlug} formStatus={formStatus} /> : null;
+          })()}
       </main>
 
       {isDemo && (
