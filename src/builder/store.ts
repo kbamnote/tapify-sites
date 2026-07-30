@@ -169,21 +169,24 @@ export const useBuilder = create<BuilderState>((set, get) => {
   }
 
   /**
-   * Apply a mutation to ALL footer sections across every page.
-   * Used so that editing the footer on one page updates it site-wide.
-   * Only syncs when the source section is of type "footer".
+   * Copy the ENTIRE footer section to all pages when a footer is edited.
+   * This ensures every page's footer stays identical — any change made to
+   * props, style, or variant makes the source footer the canonical version
+   * and replaces all other footer sections with its full content.
    */
-  function syncFooterMutation(doc: SiteDoc, pageId: string | null, sectionId: string, fn: (s: Section) => void) {
+  function syncFooterMutation(doc: SiteDoc, pageId: string | null, sectionId: string) {
     const page = doc.pages.find((p) => p.id === pageId) ?? doc.pages[0];
     if (!page) return;
     const source = page.sections.find((s) => s.id === sectionId);
     if (!source || source.type !== "footer") return;
 
-    // Apply the mutation to every footer section across all pages
+    // Full copy: replace every other footer section with the source's content
     for (const p of doc.pages) {
       for (const s of p.sections) {
         if (s.type === "footer" && s.id !== sectionId) {
-          fn(s);
+          s.props = clone(source.props);
+          s.variant = source.variant;
+          s.style = clone(source.style);
         }
       }
     }
@@ -234,10 +237,8 @@ export const useBuilder = create<BuilderState>((set, get) => {
         withSection(doc, get().pageId, sectionId, (s) => {
           s.props = { ...(s.props ?? {}), [key]: value };
         });
-        // Footer edits apply site-wide — sync to all pages.
-        syncFooterMutation(doc, get().pageId, sectionId, (s) => {
-          s.props = { ...(s.props ?? {}), [key]: value };
-        });
+        // Footer edits apply site-wide — copy the entire footer to all pages.
+        syncFooterMutation(doc, get().pageId, sectionId);
       });
     },
 
@@ -250,18 +251,14 @@ export const useBuilder = create<BuilderState>((set, get) => {
           if (value === undefined) delete next[key];
           s.style = next;
         });
-        syncFooterMutation(doc, get().pageId, sectionId, (s) => {
-          const next = { ...(s.style ?? {}), [key]: value } as SectionStyle;
-          if (value === undefined) delete next[key];
-          s.style = next;
-        });
+        syncFooterMutation(doc, get().pageId, sectionId);
       });
     },
 
     setVariant(sectionId, variant) {
       mutate((doc) => {
         withSection(doc, get().pageId, sectionId, (s) => { s.variant = variant; });
-        syncFooterMutation(doc, get().pageId, sectionId, (s) => { s.variant = variant; });
+        syncFooterMutation(doc, get().pageId, sectionId);
       });
     },
 
