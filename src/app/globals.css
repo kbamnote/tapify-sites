@@ -12,47 +12,54 @@
  * theme variables generated in src/lib/theme.ts.
  */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+/* These resets MUST stay inside `@layer base`. Tailwind v4 puts its utilities in
+   cascade layers, and unlayered CSS outranks every layered rule regardless of
+   specificity — so an unlayered `a { color: inherit }` beat `text-white` (making
+   dark buttons render invisible text) and `p { margin: 0 }` beat `mt-*`, silently
+   killing spacing utilities on paragraphs and headings. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
-}
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
 
-body {
-  margin: 0;
-}
+  body {
+    margin: 0;
+  }
 
-/* Headings follow the theme's heading font unless a section overrides it. */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading, system-ui, sans-serif);
-  margin: 0;
-}
+  /* Headings follow the theme's heading font unless a section overrides it. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading, system-ui, sans-serif);
+    margin: 0;
+  }
 
-p {
-  margin: 0;
-}
+  p {
+    margin: 0;
+  }
 
-img,
-video {
-  max-width: 100%;
-}
+  img,
+  video {
+    max-width: 100%;
+  }
 
-a {
-  color: inherit;
-  text-decoration: none;
-}
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-/* The FAQ section styles its own marker. */
-summary::-webkit-details-marker {
-  display: none;
-}
-summary {
-  list-style: none;
+  /* The FAQ section styles its own marker. */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary {
+    list-style: none;
+  }
 }
 
 /* Respect visitors who ask for less motion. */

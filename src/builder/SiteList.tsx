@@ -136,7 +136,7 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
     : sites;
 
   return (
-    <Shell>
+    <Shell wide={!creating}>
       {creating ? (
         <CreateForm
           industries={industries}
@@ -164,7 +164,7 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
           </div>
 
           {sites.length > 3 && (
-            <div className="relative mb-3">
+            <div className="relative mb-3 max-w-sm">
               <label htmlFor="siteSearch" className="sr-only">
                 Search websites
               </label>
@@ -231,7 +231,7 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
               </button>
             </div>
           ) : (
-            <ul className="grid gap-2.5">
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {visible.map((s) => {
                 const live = s.status === "published";
                 const client = s.owner_name || s.owner_email;
@@ -316,10 +316,12 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
 
 /* ------------------------------------------------------------------ pieces */
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="flex min-h-dvh justify-center bg-slate-50 p-6">
-      <div className="w-full max-w-lg">
+      {/* The card grid needs room for three columns; forms stay narrow so their
+          fields don't stretch to an unreadable width. */}
+      <div className={`w-full ${wide ? "max-w-5xl" : "max-w-lg"}`}>
         <h1 className="text-xl font-bold text-slate-900">Tapify Website Builder</h1>
         <p className="mt-0.5 text-xs text-slate-500">Build a full website — no code.</p>
         <div className="mt-5 space-y-4">{children}</div>
