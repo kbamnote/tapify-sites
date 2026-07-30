@@ -129,16 +129,15 @@ export default async function SitePage({
 
       {/* The theme lives here as CSS variables — every section inherits it, which
           is why changing one token restyles the whole page. */}
-      {/* If the page has no footer, render one from another page so the
-          footer always appears site-wide (the builder syncs footer edits
-          across pages, so any footer found is representative). */}
+      {/* If the page has no header/footer, render one from another page so
+          these site-wide chrome sections are consistent everywhere. The
+          builder syncs header/footer edits across all pages automatically. */}
       <main style={themeToCssVars(doc.theme)}>
+        {!page.sections.some((s) => s.type === "header") &&
+          (() => { const g = findGlobalSection(doc, "header"); return g ? <RenderSection section={g} doc={doc} siteSlug={siteSlug} formStatus={formStatus} /> : null; })()}
         <RenderSections sections={page.sections} doc={doc} siteSlug={siteSlug} formStatus={formStatus} />
         {!page.sections.some((s) => s.type === "footer") &&
-          (() => {
-            const gf = findGlobalSection(doc, "footer");
-            return gf ? <RenderSection section={gf} doc={doc} siteSlug={siteSlug} formStatus={formStatus} /> : null;
-          })()}
+          (() => { const g = findGlobalSection(doc, "footer"); return g ? <RenderSection section={g} doc={doc} siteSlug={siteSlug} formStatus={formStatus} /> : null; })()}
       </main>
 
       {isDemo && (

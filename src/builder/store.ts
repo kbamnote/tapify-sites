@@ -169,21 +169,23 @@ export const useBuilder = create<BuilderState>((set, get) => {
   }
 
   /**
-   * Copy the ENTIRE footer section to all pages when a footer is edited.
-   * This ensures every page's footer stays identical — any change made to
-   * props, style, or variant makes the source footer the canonical version
-   * and replaces all other footer sections with its full content.
+   * Copy the ENTIRE section to all pages when a section that should be
+   * site-wide (header, footer) is edited. Any change to props, style, or
+   * variant makes the source section the canonical version and replaces
+   * all matching sections on other pages with its full content.
    */
-  function syncFooterMutation(doc: SiteDoc, pageId: string | null, sectionId: string) {
+  function syncSectionMutation(doc: SiteDoc, pageId: string | null, sectionId: string) {
     const page = doc.pages.find((p) => p.id === pageId) ?? doc.pages[0];
     if (!page) return;
     const source = page.sections.find((s) => s.id === sectionId);
-    if (!source || source.type !== "footer") return;
+    if (!source) return;
+    const type = source.type;
+    if (type !== "header" && type !== "footer") return;
 
-    // Full copy: replace every other footer section with the source's content
+    // Full copy: replace every matching section on other pages with the source's content
     for (const p of doc.pages) {
       for (const s of p.sections) {
-        if (s.type === "footer" && s.id !== sectionId) {
+        if (s.type === type && s.id !== sectionId) {
           s.props = clone(source.props);
           s.variant = source.variant;
           s.style = clone(source.style);
@@ -237,8 +239,8 @@ export const useBuilder = create<BuilderState>((set, get) => {
         withSection(doc, get().pageId, sectionId, (s) => {
           s.props = { ...(s.props ?? {}), [key]: value };
         });
-        // Footer edits apply site-wide — copy the entire footer to all pages.
-        syncFooterMutation(doc, get().pageId, sectionId);
+        // Header/footer edits apply site-wide — copy to all pages.
+        syncSectionMutation(doc, get().pageId, sectionId);
       });
     },
 
@@ -251,14 +253,14 @@ export const useBuilder = create<BuilderState>((set, get) => {
           if (value === undefined) delete next[key];
           s.style = next;
         });
-        syncFooterMutation(doc, get().pageId, sectionId);
+        syncSectionMutation(doc, get().pageId, sectionId);
       });
     },
 
     setVariant(sectionId, variant) {
       mutate((doc) => {
         withSection(doc, get().pageId, sectionId, (s) => { s.variant = variant; });
-        syncFooterMutation(doc, get().pageId, sectionId);
+        syncSectionMutation(doc, get().pageId, sectionId);
       });
     },
 
