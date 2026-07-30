@@ -38,6 +38,7 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setStatus("loading");
@@ -122,6 +123,18 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
     );
   }
 
+  // Client-side filter: one box matches the client, the website and its address,
+  // so you can type whatever you remember. The list is a per-user set, never big
+  // enough to need a server-side search.
+  const q = query.trim().toLowerCase();
+  const visible = q
+    ? sites.filter((s) =>
+        [s.name, s.slug, s.industry, s.owner_name, s.owner_email].some((v) =>
+          (v ?? "").toLowerCase().includes(q)
+        )
+      )
+    : sites;
+
   return (
     <Shell>
       {creating ? (
@@ -136,7 +149,8 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
         <>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-              {canCreate ? "All websites" : "My website"} {sites.length ? `(${sites.length})` : ""}
+              {canCreate ? "All websites" : "My website"}{" "}
+              {sites.length ? (q ? `(${visible.length} of ${sites.length})` : `(${sites.length})`) : ""}
             </h2>
             {canCreate && (
               <button
@@ -148,6 +162,38 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
               </button>
             )}
           </div>
+
+          {sites.length > 3 && (
+            <div className="relative mb-3">
+              <label htmlFor="siteSearch" className="sr-only">
+                Search websites
+              </label>
+              <input
+                id="siteSearch"
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search client, website, address or industry…"
+                className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-8 pr-8 text-xs outline-none placeholder:text-slate-400 focus:border-slate-900"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400"
+              >
+                ⌕
+              </span>
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  title="Clear search"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded px-1.5 text-sm leading-none text-slate-400 hover:text-slate-900"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          )}
 
           {!sites.length ? (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
@@ -170,49 +216,95 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
                 </>
               )}
             </div>
+          ) : !visible.length ? (
+            <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
+              <p className="text-sm font-semibold text-slate-800">No matches</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Nothing matches “{query.trim()}”. Try a client name, website name or web address.
+              </p>
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="mt-3 text-[11px] font-semibold text-slate-600 hover:underline"
+              >
+                Clear search
+              </button>
+            </div>
           ) : (
-            <ul className="space-y-2">
-              {sites.map((s) => (
-                <li key={s.id} className="flex items-stretch gap-2">
-                  <a
-                    href={`/builder/${s.id}`}
-                    className="flex flex-1 items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 transition-colors hover:border-slate-900"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold text-slate-900">{s.name}</span>
-                      <span className="block truncate text-[11px] text-slate-500">
-                        {s.slug}.tapify.co.in
-                        {s.industry ? ` · ${s.industry}` : ""}
-                      </span>
-                      {(s.owner_name || s.owner_email) && (
-                        <span className="mt-0.5 block truncate text-[10px] text-slate-400">
-                          Client: {s.owner_name || s.owner_email}
+            <ul className="grid gap-2.5">
+              {visible.map((s) => {
+                const live = s.status === "published";
+                const client = s.owner_name || s.owner_email;
+                return (
+                  <li key={s.id}>
+                    {/* A card rather than one big link: it carries several actions,
+                        and nesting buttons inside an <a> is invalid. */}
+                    <article className="rounded-xl border border-slate-200 bg-white p-3.5 transition-colors hover:border-slate-400">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
+                          {s.name}
+                        </h3>
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            live ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {live ? "Live" : "Draft"}
                         </span>
+                      </div>
+
+                      <p className="mt-0.5 truncate text-[11px] text-slate-500">
+                        {s.slug}.tapify.co.in
+                      </p>
+
+                      {(s.industry || client) && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          {s.industry && (
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+                              {s.industry}
+                            </span>
+                          )}
+                          {client && (
+                            <span className="max-w-full truncate rounded-full bg-violet-50 px-2 py-0.5 text-[10px] font-semibold text-violet-700">
+                              Client: {client}
+                            </span>
+                          )}
+                        </div>
                       )}
-                    </span>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                        s.status === "published"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}
-                    >
-                      {s.status === "published" ? "Live" : "Draft"}
-                    </span>
-                  </a>
-                  {canDelete && (
-                    <button
-                      type="button"
-                      onClick={() => void remove(s)}
-                      disabled={deletingId === s.id}
-                      title="Delete website"
-                      className="shrink-0 rounded-xl border border-rose-200 bg-white px-3 text-[11px] font-bold text-rose-600 hover:border-rose-400 disabled:opacity-40"
-                    >
-                      {deletingId === s.id ? "…" : "Delete"}
-                    </button>
-                  )}
-                </li>
-              ))}
+
+                      <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-2.5">
+                        <a
+                          href={`/builder/${s.id}`}
+                          className="rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-slate-700"
+                        >
+                          Edit
+                        </a>
+                        {live && (
+                          <a
+                            href={`https://${s.slug}.tapify.co.in`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-lg border border-slate-300 px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:border-slate-900"
+                          >
+                            View live
+                          </a>
+                        )}
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => void remove(s)}
+                            disabled={deletingId === s.id}
+                            title="Delete website"
+                            className="ml-auto rounded-lg border border-rose-200 px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:border-rose-400 disabled:opacity-40"
+                          >
+                            {deletingId === s.id ? "…" : "Delete"}
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </>
