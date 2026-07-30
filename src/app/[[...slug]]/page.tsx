@@ -67,7 +67,8 @@ export async function generateMetadata({ params }: { params: Promise<RouteParams
   const seo = page.seo ?? {};
   const title = seo.title || `${page.title} | ${doc.site.name}`;
   const description = seo.description;
-  const ogImage = mediaUrl(seo.ogImage);
+  const favicon = mediaUrl(doc.site.favicon);
+  const ogImage = mediaUrl(seo.ogImage) ?? favicon;
 
   return {
     title,
@@ -75,13 +76,13 @@ export async function generateMetadata({ params }: { params: Promise<RouteParams
     keywords: seo.keywords,
     robots: seo.robots ?? "index,follow",
     alternates: seo.canonical ? { canonical: seo.canonical } : undefined,
-    icons: mediaUrl(doc.site.favicon) ? { icon: mediaUrl(doc.site.favicon) } : undefined,
+    icons: favicon ? { icon: favicon } : undefined,
     openGraph: {
       title,
       description,
       siteName: doc.site.name,
       type: "website",
-      images: ogImage ? [{ url: ogImage }] : undefined,
+      images: ogImage ? [{ url: ogImage, alt: title }] : undefined,
     },
     twitter: {
       card: ogImage ? "summary_large_image" : "summary",
