@@ -137,6 +137,23 @@ export function deleteSite(siteId: number) {
   });
 }
 
+/**
+ * Change a website's public address. Takes effect immediately; the old address
+ * keeps working as a permanent redirect, so printed QR codes do not break.
+ */
+export function changeSlug(siteId: number, slug: string) {
+  return request<{
+    slug: string;
+    previous_slug: string;
+    url: string;
+    previous_url: string;
+  }>("/sites/change-slug.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ site_id: siteId, slug }),
+  });
+}
+
 export function getDraft(siteId: number | string) {
   return request<{
     site: { id: number; slug: string; name: string; status: string; published: boolean };

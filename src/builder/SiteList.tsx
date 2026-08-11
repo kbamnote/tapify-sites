@@ -14,6 +14,7 @@ import {
   listSites,
   createSite,
   deleteSite,
+  changeSlug,
   listUsers,
   slugify,
   isValidSlug,
@@ -38,6 +39,7 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [renamingId, setRenamingId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
@@ -66,6 +68,37 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
       window.alert(e instanceof Error ? e.message : "Could not delete the website.");
     } finally {
       setDeletingId(null);
+    }
+  }, []);
+
+  // Renaming is destructive-adjacent: the address changes instantly. The old one
+  // keeps working as a 301, and the confirm says so — otherwise nobody would
+  // dare click it on a site whose QR codes are already printed.
+  const rename = useCallback(async (site: SiteSummary) => {
+    const input = window.prompt(
+      `New web address for "${site.name}".\n\n` +
+        `Current: ${site.slug}.tapify.co.in\n\n` +
+        `The old address will keep working — it redirects here permanently, so printed QR codes and business cards are safe.`,
+      site.slug
+    );
+    if (input === null) return;
+
+    const next = slugify(input.trim().toLowerCase());
+    if (next === site.slug) return;
+    if (!isValidSlug(next)) {
+      window.alert("Use 3–63 characters: a–z, 0–9 and hyphens, not starting or ending with a hyphen.");
+      return;
+    }
+
+    setRenamingId(site.id);
+    try {
+      const res = await changeSlug(site.id, next);
+      setSites((prev) => prev.map((s) => (s.id === site.id ? { ...s, slug: res.slug } : s)));
+      window.alert(`Address updated to ${res.slug}.tapify.co.in\n\n${res.previous_slug}.tapify.co.in now redirects here.`);
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Could not change the address.");
+    } finally {
+      setRenamingId(null);
     }
   }, []);
 
@@ -253,9 +286,22 @@ export default function SiteList({ industries }: { industries: IndustryRecipe[] 
                         </span>
                       </div>
 
-                      <p className="mt-0.5 truncate text-[11px] text-slate-500">
-                        {s.slug}.tapify.co.in
-                      </p>
+                      {/* Shown to everyone who can see the site: a client only ever
+                          sees their own, and the backend enforces owner-or-staff. */}
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <p className="min-w-0 truncate text-[11px] text-slate-500">
+                          {s.slug}.tapify.co.in
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => void rename(s)}
+                          disabled={renamingId === s.id}
+                          title="Change web address"
+                          className="shrink-0 text-[10px] font-semibold text-slate-400 underline-offset-2 hover:text-slate-900 hover:underline disabled:opacity-40"
+                        >
+                          {renamingId === s.id ? "…" : "Change"}
+                        </button>
+                      </div>
 
                       {(s.industry || client) && (
                         <div className="mt-2 flex flex-wrap items-center gap-1.5">
