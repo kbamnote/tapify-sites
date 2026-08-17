@@ -100,7 +100,16 @@ interface BuilderState {
 
 const API = process.env.NEXT_PUBLIC_TAPIFY_API ?? "https://app.tapify.co.in/api";
 
-const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v));
+/**
+ * Deep copy via JSON.
+ *
+ * The undefined guard is load-bearing, not defensive noise: JSON.stringify
+ * returns the VALUE undefined (not a string) for an undefined input, and
+ * JSON.parse then coerces that to the string "undefined" and throws
+ * `SyntaxError: "undefined" is not valid JSON`. Sections legitimately have no
+ * `style` key until someone styles them, so cloning one crashed the whole edit.
+ */
+const clone = <T,>(v: T): T => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
 
 /** Stable, never-reused section id (matches SchemaRegistry::newSectionId). */
 function newId(): string {
@@ -186,9 +195,12 @@ export const useBuilder = create<BuilderState>((set, get) => {
     for (const p of doc.pages) {
       for (const s of p.sections) {
         if (s.type === type && s.id !== sectionId) {
-          s.props = clone(source.props);
+          s.props = clone(source.props ?? {});
           s.variant = source.variant;
-          s.style = clone(source.style);
+          // An unstyled source means "no style" — drop the key rather than
+          // writing an explicit undefined the validator would have to ignore.
+          if (source.style === undefined) delete s.style;
+          else s.style = clone(source.style);
         }
       }
     }
