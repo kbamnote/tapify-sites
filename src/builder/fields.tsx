@@ -168,12 +168,26 @@ function MediaField({ field, value, onChange }: FieldProps) {
     setBusy(true);
     try {
       const media = await uploadMedia(file, siteId);
+      // The upload can succeed and still hand back nothing usable. Reading
+      // .ref off an undefined here threw a TypeError, which is not an ApiError,
+      // so the catch below reported the generic "Upload failed" — hiding the
+      // fact that the file had actually uploaded fine.
+      if (!media?.ref) {
+        throw new ApiError("The file uploaded but the server did not return a reference. Check the media library before retrying.");
+      }
       onChange(media.ref); // store "media:<id>", not the URL
     } catch (e) {
       if (e instanceof NotSignedInError) {
         setError("Please sign in again to upload.");
+      } else if (e instanceof ApiError) {
+        setError(e.message);
       } else {
-        setError(e instanceof ApiError ? e.message : "Upload failed. Please try again.");
+        // Never swallow the real reason again. request() only ever throws
+        // ApiError or NotSignedInError, so anything landing here came from our
+        // own code after a successful response — and a bare "try again" sends
+        // the customer round a loop that cannot succeed.
+        console.error("[media upload] unexpected failure", e);
+        setError(e instanceof Error ? `Upload failed: ${e.message}` : "Upload failed. Please try again.");
       }
     } finally {
       setBusy(false);
