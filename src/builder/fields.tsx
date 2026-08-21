@@ -104,12 +104,21 @@ function ToggleField({ value, onChange }: FieldProps) {
 }
 
 function SelectField({ field, value, onChange }: FieldProps) {
+  // An option is either a bare string, or { value, label } where the choice needs
+  // a fuller explanation than its stored value — "whatsapp" alone does not tell a
+  // shop owner what the setting does. Calling .replace() on the object form threw,
+  // so an object-style select crashed this panel rather than rendering.
+  const options = (field.options ?? []).map((o) =>
+    typeof o === "string"
+      ? { value: o, label: o.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) }
+      : { value: String(o.value ?? ""), label: String(o.label ?? o.value ?? "") },
+  );
   return (
     <select className={inputCls} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)}>
       <option value="">—</option>
-      {(field.options ?? []).map((o) => (
-        <option key={o} value={o}>
-          {o.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
         </option>
       ))}
     </select>

@@ -36,7 +36,13 @@ export interface FieldDef {
   min?: number;
   max?: number;
   default?: unknown;
-  options?: string[];
+  /**
+   * Choices for a `select`. Either bare strings, or { value, label } where the
+   * option needs a fuller description than its stored value (see products/services
+   * `orderVia`). This was typed `string[]` while the schema files already shipped
+   * the object form, so the two disagreed and the object case went unhandled.
+   */
+  options?: (string | { value: string; label?: string })[];
   accept?: string[];
   /** Conditional visibility, e.g. { variant: ["split"] } */
   showIf?: { variant?: string[] };
