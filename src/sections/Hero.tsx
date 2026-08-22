@@ -3,13 +3,14 @@
 import { useEffect, useRef } from "react";
 import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
-import { SectionShell, CtaButton, isDarkBg } from "./_shared";
+import { SectionShell, CtaButton, isDarkBg, imageFitStyle, type Crop } from "./_shared";
 
 interface HeroProps {
   badge?: string;
   heading?: string;
   sub?: string;
   image?: string;
+  imageFit?: string | Crop;
   video?: string;
   videoUrl?: string;
   fullHeight?: boolean;
@@ -94,7 +95,7 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
       ? // A video backdrop is dark, so force light-on-dark treatment.
         { ...section, style: { ...(section.style ?? {}), bg: "dark" as const } }
       : variant === "centered-bg" && props.image
-        ? { ...section, style: { ...(section.style ?? {}), bg: "image" as const, bgMedia: props.image, overlay: section.style?.overlay ?? 0.55 } }
+        ? { ...section, style: { ...(section.style ?? {}), bg: "image" as const, bgMedia: props.image, bgFit: props.imageFit, overlay: section.style?.overlay ?? 0.55 } }
         : section;
   const onDark = isDarkBg(heroSection.style);
 
@@ -171,8 +172,9 @@ export default function Hero({ section, props, doc }: SectionProps<HeroProps>) {
             <img
               src={img!}
               alt={props.heading ?? doc.site.name}
-              className="w-full object-cover"
-              style={{ borderRadius: "var(--radius)", maxHeight: 460 }}
+              className="w-full"
+              style={{ borderRadius: "var(--radius)", maxHeight: 460,
+                       ...imageFitStyle(props.imageFit, "var(--radius)") }}
             />
           )}
         </div>

@@ -36,6 +36,38 @@ function bgStyles(style: SectionStyle | undefined): CSSProperties {
   }
 }
 
+/**
+ * The same visual crop as the shared image cropper, for a photo painted as a CSS
+ * background. The hero is the only section that paints its picture this way, so
+ * it never got the cropper — its photo was permanently `cover` and centred. That
+ * is invisible with a 16:9 video (which matches the hero box, so `cover` crops
+ * nothing) but obvious with a phone photo: a 4:3 shot loses a quarter of its
+ * height and a portrait one over half, always off the top and bottom.
+ *
+ * background-size has no "cover, then zoom", so zoom becomes a transform on the
+ * layer; the section is overflow-hidden, so the scaled paint is clipped to it.
+ */
+function bgFitStyles(fit?: string | Crop): CSSProperties {
+  if (!fit) return {};
+  if (typeof fit === "string") {
+    if (fit === "contain") return { backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center" };
+    if (fit === "top") return { backgroundSize: "cover", backgroundPosition: "center top" };
+    return {};
+  }
+  if ((fit.fit ?? "cover") === "contain") {
+    return { backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center" };
+  }
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  const x = clamp(Number(fit.x ?? 50), 0, 100);
+  const y = clamp(Number(fit.y ?? 50), 0, 100);
+  const z = clamp(Number(fit.zoom ?? 1), 1, 4);
+  return {
+    backgroundSize: "cover",
+    backgroundPosition: `${x}% ${y}%`,
+    ...(z > 1.001 ? { transform: `scale(${z})`, transformOrigin: `${x}% ${y}%` } : {}),
+  };
+}
+
 export function SectionShell({
   section,
   children,
@@ -93,7 +125,7 @@ export function SectionShell({
           <div
             aria-hidden
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${bgImg})` }}
+            style={{ backgroundImage: `url(${bgImg})`, ...bgFitStyles(style.bgFit) }}
           />
           <div aria-hidden className="absolute inset-0" style={{ background: `rgba(2,6,23,${overlay})` }} />
         </>

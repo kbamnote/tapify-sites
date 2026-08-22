@@ -36,6 +36,13 @@ export interface SectionStyle {
   align?: "left" | "center" | "right";
   bg?: "default" | "surface" | "primary" | "dark" | "image" | "none";
   bgMedia?: MediaRef;
+  /**
+   * Visual crop for `bgMedia`, in the same shape the image cropper writes
+   * elsewhere. Legacy string values predate the cropper. Without this a hero
+   * photo is always `cover` and centred, which silently cuts the top and bottom
+   * off anything that is not 16:9.
+   */
+  bgFit?: string | { fit?: "cover" | "contain"; x?: number; y?: number; zoom?: number };
   overlay?: number;
   radius?: "none" | "sm" | "md" | "lg" | "xl";
   /** Per-section font colours, for when the theme's text colour reads wrong here. */
