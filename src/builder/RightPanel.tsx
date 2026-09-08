@@ -15,10 +15,12 @@ import ThemePanel from "./ThemePanel";
 import PagesPanel from "./PagesPanel";
 import SeoPanel from "./SeoPanel";
 import BusinessPanel from "./BusinessPanel";
+import CatalogPanel from "./CatalogPanel";
 
-const TABS: { id: "section" | "theme" | "pages" | "seo" | "business"; label: string }[] = [
+const TABS: { id: "section" | "theme" | "pages" | "seo" | "business" | "catalog"; label: string }[] = [
   { id: "section", label: "Section" },
   { id: "pages", label: "Pages" },
+  { id: "catalog", label: "Catalogue" },
   { id: "business", label: "Business" },
   { id: "theme", label: "Theme" },
   { id: "seo", label: "SEO" },
@@ -57,6 +59,8 @@ export default function RightPanel() {
           <SeoPanel />
         ) : rightTab === "business" ? (
           <BusinessPanel />
+        ) : rightTab === "catalog" ? (
+          <CatalogPanel />
         ) : (
           <Inspector />
         )}

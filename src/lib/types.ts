@@ -127,6 +127,18 @@ export interface SiteForm {
   fields: FormField[];
 }
 
+/**
+ * One product in the shared catalogue.
+ *
+ * Beyond the id it is the SAME shape as an inline `items` row on a products /
+ * services section — deliberately open, so adding a field to that manifest needs
+ * no change here and the panel that edits it picks the field up automatically.
+ */
+export interface CatalogProduct extends Record<string, unknown> {
+  id: string;
+  title?: string;
+}
+
 export interface SiteDoc {
   schemaVersion: 1;
   site: { name: string; industry?: string; locale?: string; favicon?: MediaRef };
@@ -136,6 +148,13 @@ export interface SiteDoc {
   business?: Business;
   forms?: SiteForm[];
   settings?: SiteSettings;
+  /**
+   * Products stored once and referenced from sections by `props.itemRefs`, so a
+   * price change reaches every page the product appears on. A section's own
+   * `props.items` still renders as before — documents without a catalogue are
+   * untouched.
+   */
+  catalog?: { products: CatalogProduct[] };
 }
 
 export interface SiteSettings {

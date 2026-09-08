@@ -396,6 +396,143 @@ function RepeaterField({ field, value, onChange, variant }: FieldProps & { varia
   );
 }
 
+/* --------------------------------------------------------- catalogue refs */
+
+/**
+ * Chooser for `itemRefs` — which shared-catalogue products this section shows.
+ *
+ * The stored value is just an ordered array of ids (a plain `list`, which is
+ * what the server validates), so this is purely a nicer way to write that array:
+ * pick by title and photo instead of typing ids, and reorder to set the order
+ * the cards appear in.
+ */
+function CatalogRefsField({ field, value, onChange }: FieldProps) {
+  const products = useBuilder((s) => s.doc?.catalog?.products);
+  const setRightTab = useBuilder((s) => s.setRightTab);
+  const [adding, setAdding] = useState(false);
+  const [q, setQ] = useState("");
+
+  const refs = Array.isArray(value) ? (value as string[]) : [];
+  const all = products ?? [];
+  const byId = new Map(all.map((p) => [p.id, p]));
+
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= refs.length) return;
+    const next = [...refs];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  if (!all.length) {
+    return (
+      <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-2.5">
+        <p className="text-[11px] leading-snug text-slate-600">
+          Your shared catalogue is empty. Add a product there once and you can show it on as many
+          pages as you like — editing it updates every one of them.
+        </p>
+        <button
+          type="button"
+          onClick={() => setRightTab("catalog")}
+          className="mt-2 rounded-md bg-slate-900 px-2.5 py-1.5 text-[11px] font-semibold text-white"
+        >
+          Open Catalogue
+        </button>
+      </div>
+    );
+  }
+
+  const unpicked = all.filter((p) => !refs.includes(p.id));
+  const needle = q.trim().toLowerCase();
+  const offered = needle
+    ? unpicked.filter((p) => String(p.title ?? "").toLowerCase().includes(needle))
+    : unpicked;
+
+  return (
+    <div className="space-y-1.5">
+      {refs.map((id, i) => {
+        const p = byId.get(id);
+        const img = typeof p?.image === "string" ? p.image : undefined;
+        return (
+          <div
+            key={id + i}
+            className={`flex items-center gap-2 rounded-md border px-2 py-1.5 ${
+              p ? "border-slate-200 bg-white" : "border-rose-300 bg-rose-50"
+            }`}
+          >
+            {img ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={mediaSrc(img)} alt="" className="h-8 w-8 shrink-0 rounded object-cover" />
+            ) : (
+              <div className="h-8 w-8 shrink-0 rounded bg-slate-100" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-semibold text-slate-800">
+                {p ? (p.title as string) || "Untitled" : "Deleted product"}
+              </p>
+              <p className="truncate text-[10px] text-slate-400">
+                {p ? ((p.price as string) ?? id) : `“${id}” is no longer in the catalogue — remove it, or saving will fail.`}
+              </p>
+            </div>
+            <button type="button" onClick={() => move(i, -1)} disabled={i === 0}
+              className="px-1 text-[11px] text-slate-400 hover:text-slate-900 disabled:opacity-30" title="Move up">↑</button>
+            <button type="button" onClick={() => move(i, 1)} disabled={i === refs.length - 1}
+              className="px-1 text-[11px] text-slate-400 hover:text-slate-900 disabled:opacity-30" title="Move down">↓</button>
+            <button type="button" onClick={() => onChange(refs.filter((_, k) => k !== i))}
+              className="px-1 text-[11px] text-slate-400 hover:text-rose-600" title="Remove from this section">✕</button>
+          </div>
+        );
+      })}
+
+      {adding ? (
+        <div className="rounded-md border border-slate-300 bg-white p-2">
+          <input
+            className={inputCls}
+            autoFocus
+            placeholder="Search the catalogue…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <div className="mt-1.5 max-h-56 space-y-0.5 overflow-y-auto">
+            {offered.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onChange([...refs, p.id])}
+                className="flex w-full items-center gap-2 rounded px-1.5 py-1 text-left hover:bg-slate-100"
+              >
+                <span className="truncate text-[11px] text-slate-800">{(p.title as string) || "Untitled"}</span>
+                <span className="ml-auto shrink-0 text-[10px] text-slate-400">{(p.price as string) ?? ""}</span>
+              </button>
+            ))}
+            {!offered.length && (
+              <p className="px-1.5 py-2 text-[10px] text-slate-400">
+                {unpicked.length ? "No product matches that." : "Every product is already on this section."}
+              </p>
+            )}
+          </div>
+          <button type="button" onClick={() => { setAdding(false); setQ(""); }}
+            className="mt-1.5 text-[11px] font-semibold text-slate-500 hover:underline">Done</button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={() => setAdding(true)} disabled={!unpicked.length}
+            className="text-[11px] font-semibold text-slate-700 hover:underline disabled:opacity-40">
+            + Add from catalogue
+          </button>
+          <button type="button" onClick={() => setRightTab("catalog")}
+            className="text-[11px] text-slate-400 hover:text-slate-700 hover:underline">
+            Manage catalogue
+          </button>
+        </div>
+      )}
+      {!!field.max && refs.length > field.max && (
+        <p className="text-[10px] text-amber-700">Only the first {field.max} will be shown.</p>
+      )}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------- dispatcher */
 
 export function Field({
@@ -408,6 +545,10 @@ export function Field({
   const inline = field.type === "toggle";
 
   const control = (() => {
+    // A picker upgrades the control, never the stored shape — so an editor that
+    // does not recognise one still falls through to the field's real type.
+    if (field.picker === "catalog") return <CatalogRefsField field={field} value={value} onChange={onChange} />;
+
     switch (field.type) {
       case "textarea":
       case "richtext":

@@ -15,7 +15,7 @@
  */
 
 import { create } from "zustand";
-import type { Section, SiteDoc, SectionStyle, ThemeTokens, Seo, Business, SiteSettings } from "@/lib/types";
+import type { Section, SiteDoc, SectionStyle, ThemeTokens, Seo, Business, SiteSettings, CatalogProduct } from "@/lib/types";
 import type { SectionManifest } from "./schema-types";
 
 const HISTORY_LIMIT = 60;
@@ -40,7 +40,7 @@ interface BuilderState {
   pageId: string | null;
   selectedId: string | null;
   device: Device;
-  rightTab: "section" | "theme" | "pages" | "seo" | "business";
+  rightTab: "section" | "theme" | "pages" | "seo" | "business" | "catalog";
 
   saveState: SaveState;
   saveError: string | null;
@@ -56,7 +56,7 @@ interface BuilderState {
   selectPage(pageId: string): void;
   select(sectionId: string | null): void;
   setDevice(d: Device): void;
-  setRightTab(tab: "section" | "theme" | "pages" | "seo" | "business"): void;
+  setRightTab(tab: "section" | "theme" | "pages" | "seo" | "business" | "catalog"): void;
 
   // pages
   addPage(): void;
@@ -89,6 +89,13 @@ interface BuilderState {
 
   /** Site-wide settings (mobile bar, feature toggles). */
   patchSettings(patch: Partial<SiteSettings>): void;
+
+  /* shared product catalogue — edited once, rendered everywhere it is referenced */
+  addCatalogProduct(seed?: Partial<CatalogProduct>): string | null;
+  setCatalogField(id: string, key: string, value: unknown): void;
+  duplicateCatalogProduct(id: string): void;
+  removeCatalogProduct(id: string): void;
+  moveCatalogProduct(id: string, dir: -1 | 1): void;
 
   // history + save
   undo(): void;
@@ -123,6 +130,23 @@ function newPageId(): string {
   const b = new Uint8Array(4);
   crypto.getRandomValues(b);
   return "p_" + Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * A catalogue product id.
+ *
+ * Random rather than derived from the title, because the id is what every
+ * section stores: deriving it from the title would mean renaming a product
+ * silently orphaned every reference to it. Must match the validator's
+ * ^[a-zA-Z0-9_-]{1,60}$, so no dots or slashes.
+ */
+function newProductId(taken: Set<string>): string {
+  for (;;) {
+    const b = new Uint8Array(5);
+    crypto.getRandomValues(b);
+    const id = "prod-" + Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+    if (!taken.has(id)) return id;
+  }
 }
 
 /** Normalise a title into the slug BODY (no leading slash). "About Us" -> "about-us". */
@@ -461,6 +485,72 @@ export const useBuilder = create<BuilderState>((set, get) => {
     patchSettings(patch) {
       mutate((doc) => {
         doc.settings = { ...(doc.settings ?? {}), ...patch };
+      });
+    },
+
+    /* ---------------------------------------------------------- catalogue */
+
+    addCatalogProduct(seed) {
+      const doc = get().doc;
+      if (!doc) return null;
+      const id = newProductId(new Set((doc.catalog?.products ?? []).map((p) => p.id)));
+      mutate((d) => {
+        d.catalog = d.catalog ?? { products: [] };
+        d.catalog.products.push({ ...(seed ?? {}), id, title: seed?.title ?? "New product" });
+      });
+      return id;
+    },
+
+    setCatalogField(id, key, value) {
+      mutate((doc) => {
+        const p = doc.catalog?.products.find((x) => x.id === id);
+        // `id` is the reference every section holds — editing it here would
+        // orphan them all, so it is not writable through this path.
+        if (p && key !== "id") p[key] = value;
+      });
+    },
+
+    duplicateCatalogProduct(id) {
+      const doc = get().doc;
+      if (!doc) return;
+      const newIdForCopy = newProductId(new Set((doc.catalog?.products ?? []).map((p) => p.id)));
+      mutate((d) => {
+        const list = d.catalog?.products;
+        if (!list) return;
+        const i = list.findIndex((x) => x.id === id);
+        if (i === -1) return;
+        const copy = clone(list[i]);
+        copy.id = newIdForCopy;
+        copy.title = `${copy.title ?? "Product"} copy`;
+        list.splice(i + 1, 0, copy);
+      });
+    },
+
+    removeCatalogProduct(id) {
+      mutate((doc) => {
+        if (doc.catalog) doc.catalog.products = doc.catalog.products.filter((x) => x.id !== id);
+        // Strip the reference everywhere too. A ref that resolves to nothing is
+        // rejected by the server validator, so leaving one behind would not just
+        // render short — it would block every subsequent save of the whole site.
+        for (const page of doc.pages) {
+          for (const s of page.sections) {
+            const refs = s.props?.itemRefs;
+            if (Array.isArray(refs) && refs.includes(id)) {
+              s.props = { ...s.props, itemRefs: refs.filter((r) => r !== id) };
+            }
+          }
+        }
+      });
+    },
+
+    moveCatalogProduct(id, dir) {
+      mutate((doc) => {
+        const list = doc.catalog?.products;
+        if (!list) return;
+        const i = list.findIndex((x) => x.id === id);
+        const j = i + dir;
+        if (i === -1 || j < 0 || j >= list.length) return;
+        [list[i], list[j]] = [list[j], list[i]];
       });
     },
 

@@ -3,7 +3,7 @@ import type { SectionProps, Link as LinkT } from "@/lib/types";
 import { mediaUrl } from "@/lib/api";
 import { isDarkBg, CtaButton } from "./_shared";
 
-interface MenuLink { text?: string; href?: string }
+interface MenuLink { text?: string; href?: string; children?: { text?: string; href?: string }[] }
 interface HeaderProps {
   logo?: string;
   logoSize?: "small" | "medium" | "large" | "extra-large";
@@ -110,13 +110,43 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
     </a>
   ) : null;
 
+  // Sub-menu rows, kept in one place so the desktop panel and the mobile list
+  // agree on what counts as a usable child (both text and destination present).
+  const kids = (l: MenuLink) => (l.children ?? []).filter((c) => c.text && c.href);
+
   const desktopLinks = (
     <nav className="hidden items-center gap-6 md:flex">
-      {items.map((l, i) => (
-        <a key={i} href={l.href} className="text-sm font-medium opacity-80 transition-opacity hover:opacity-100">
-          {l.text}
-        </a>
-      ))}
+      {items.map((l, i) => {
+        const sub = kids(l);
+        if (!sub.length) {
+          return (
+            <a key={i} href={l.href} className="text-sm font-medium opacity-80 transition-opacity hover:opacity-100">
+              {l.text}
+            </a>
+          );
+        }
+        // Pure CSS, like the mobile menu — this stays a server component, and a
+        // dropdown that needs JavaScript would not survive the PHP renderer
+        // either. `focus-within` is what makes it keyboard-reachable.
+        return (
+          <div key={i} className="group relative">
+            <a href={l.href} className="inline-flex items-center gap-1 py-2 text-sm font-medium opacity-80 transition-opacity hover:opacity-100">
+              {l.text}
+              <span aria-hidden className="text-[10px] leading-none">&#9662;</span>
+            </a>
+            <div
+              className="invisible absolute left-0 top-full z-20 min-w-[220px] translate-y-1 rounded-md py-1.5 opacity-0 shadow-lg transition-all group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100"
+              style={{ background: "var(--color-surface)", color: "var(--color-text)", border: "1px solid var(--color-border)" }}
+            >
+              {sub.map((c, j) => (
+                <a key={j} href={c.href} className="block px-4 py-2 text-sm no-underline opacity-80 transition-opacity hover:opacity-100">
+                  {c.text}
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </nav>
   );
 
@@ -228,11 +258,28 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         className="hidden flex-col gap-1 px-5 pb-3 max-md:peer-checked:flex"
         style={{ borderTop: "1px solid rgba(120,120,120,.18)" }}
       >
-        {items.map((l, i) => (
-          <a key={i} href={l.href} className="rounded-md px-2 py-2 text-sm font-medium opacity-90 hover:opacity-100" style={{ background: "rgba(120,120,120,.06)" }}>
-            {l.text}
-          </a>
-        ))}
+        {items.map((l, i) => {
+          const sub = kids(l);
+          return (
+            <div key={i}>
+              <a href={l.href} className="block rounded-md px-2 py-2 text-sm font-medium opacity-90 hover:opacity-100" style={{ background: "rgba(120,120,120,.06)" }}>
+                {l.text}
+              </a>
+              {/* Always expanded on phones. A tap-to-open accordion would need a
+                  second checkbox per menu, and a shopper scrolling a short list
+                  beats one hunting for a disclosure arrow. */}
+              {!!sub.length && (
+                <div className="mt-0.5 flex flex-col gap-0.5 pl-3">
+                  {sub.map((c, j) => (
+                    <a key={j} href={c.href} className="rounded-md px-2 py-1.5 text-[13px] opacity-75 hover:opacity-100">
+                      {c.text}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
         {props.cta?.text && props.cta.href && (
           <div className="mt-2">
             <CtaButton link={props.cta} onDark={dark} />

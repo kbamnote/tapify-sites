@@ -44,6 +44,15 @@ export interface FieldDef {
    */
   options?: (string | { value: string; label?: string })[];
   accept?: string[];
+  /**
+   * Upgrade a field's control without inventing a new field TYPE.
+   *
+   * `itemRefs` is stored — and validated — as a plain `list` of ids, so an
+   * editor that has never heard of catalogues still shows something editable
+   * rather than an "unsupported field type" warning. `picker: "catalog"` tells
+   * the editors that do know to render the product chooser instead.
+   */
+  picker?: "catalog";
   /** Conditional visibility, e.g. { variant: ["split"] } */
   showIf?: { variant?: string[] };
   /** repeater only */
