@@ -32,16 +32,27 @@ export default function RightPanel() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 gap-1 border-b border-slate-200 px-2 pt-2">
+      {/* WRAPS on purpose. The panel is a fixed 288px and its <aside> is
+          overflow-hidden, so six tabs on one row put Theme and SEO past the edge
+          with no way to scroll to them — they were simply unreachable. Wrapping
+          keeps every tab clickable at any panel width, which matters because the
+          builder is embedded in the dashboard iframe and does not always get the
+          width it asks for.
+
+          The active state is a filled pill rather than the old underline: an
+          underline on a tab in the FIRST row points at nothing, since the panel
+          border is under the last row. */}
+      <div className="flex shrink-0 flex-wrap gap-1 border-b border-slate-200 px-2 pb-1.5 pt-2">
         {TABS.map((t) => {
           const active = rightTab === t.id;
           return (
             <button
               key={t.id}
               type="button"
+              aria-current={active ? "page" : undefined}
               onClick={() => setRightTab(t.id)}
-              className={`rounded-t-md px-3 py-1.5 text-[11px] font-semibold transition-colors ${
-                active ? "bg-white text-slate-900 shadow-[inset_0_-2px_0_0_#0f172a]" : "text-slate-500 hover:text-slate-900"
+              className={`rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+                active ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
               {t.label}

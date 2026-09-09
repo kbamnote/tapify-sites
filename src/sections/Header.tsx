@@ -260,24 +260,46 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
       >
         {items.map((l, i) => {
           const sub = kids(l);
-          return (
-            <div key={i}>
-              <a href={l.href} className="block rounded-md px-2 py-2 text-sm font-medium opacity-90 hover:opacity-100" style={{ background: "rgba(120,120,120,.06)" }}>
+
+          // A link with no sub-menu is just a link.
+          if (!sub.length) {
+            return (
+              <a key={i} href={l.href} className="block rounded-md px-2 py-2 text-sm font-medium opacity-90 hover:opacity-100" style={{ background: "rgba(120,120,120,.06)" }}>
                 {l.text}
               </a>
-              {/* Always expanded on phones. A tap-to-open accordion would need a
-                  second checkbox per menu, and a shopper scrolling a short list
-                  beats one hunting for a disclosure arrow. */}
-              {!!sub.length && (
-                <div className="mt-0.5 flex flex-col gap-0.5 pl-3">
-                  {sub.map((c, j) => (
-                    <a key={j} href={c.href} className="rounded-md px-2 py-1.5 text-[13px] opacity-75 hover:opacity-100">
-                      {c.text}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
+            );
+          }
+
+          // One with a sub-menu is a <details>: closed until tapped, so a menu
+          // carrying twelve categories opens as four rows rather than forty.
+          // A real disclosure widget, so it is keyboard- and screen-reader-
+          // operable without any JavaScript — this stays a server component.
+          //
+          // The parent is the TOGGLE, not a link: a <summary> that also
+          // navigates is a coin-flip on touch. Its own destination becomes the
+          // first row of the list instead.
+          return (
+            <details key={i} className="group/sub">
+              <summary
+                className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md px-2 py-2 text-sm font-medium opacity-90 hover:opacity-100 [&::-webkit-details-marker]:hidden"
+                style={{ background: "rgba(120,120,120,.06)" }}
+              >
+                {l.text}
+                <span aria-hidden className="text-[10px] leading-none transition-transform group-open/sub:rotate-180">
+                  &#9662;
+                </span>
+              </summary>
+              <div className="mt-0.5 flex flex-col gap-0.5 pl-3">
+                <a href={l.href} className="rounded-md px-2 py-1.5 text-[13px] opacity-75 hover:opacity-100">
+                  All {l.text}
+                </a>
+                {sub.map((c, j) => (
+                  <a key={j} href={c.href} className="rounded-md px-2 py-1.5 text-[13px] opacity-75 hover:opacity-100">
+                    {c.text}
+                  </a>
+                ))}
+              </div>
+            </details>
           );
         })}
         {props.cta?.text && props.cta.href && (
