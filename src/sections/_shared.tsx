@@ -247,6 +247,11 @@ export function Card({ children, className = "" }: { children: ReactNode; classN
       className={`h-full overflow-hidden ${className}`}
       style={{
         background: "var(--color-bg)",
+        // A light card sets its own text colour — inheriting the section's made
+        // titles white-on-white on primary/dark sections. The per-section colour
+        // overrides are reset too, mirroring .tf-card in SiteRenderer.php.
+        color: "var(--color-text)",
+        ...({ "--tf-heading": "initial", "--tf-text": "initial" } as CSSProperties),
         border: "1px solid var(--color-border)",
         borderRadius: "var(--radius)",
         boxShadow: "0 1px 2px rgba(16,24,40,.04), 0 8px 24px rgba(16,24,40,.06)",
