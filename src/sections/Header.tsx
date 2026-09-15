@@ -14,6 +14,8 @@ interface HeaderProps {
   showAccount?: boolean;
   accountHref?: string;
   sticky?: boolean;
+  showSearch?: boolean;
+  searchPlaceholder?: string;
 }
 
 /** Logo heights for the "Logo size" control. */
@@ -110,6 +112,33 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
     </a>
   ) : null;
 
+  // Product search — mirrors SiteRenderer::secHeader. A plain GET form to the
+  // built-in /search page; the full box only in the "left" layout (the menu
+  // moves to its own row), an icon elsewhere and on phones.
+  const searchPh = (props.searchPlaceholder ?? "").trim() || "Search products";
+  const searchSvg = (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
+    </svg>
+  );
+  const searchField = (
+    <>
+      <input type="search" name="q" placeholder={searchPh} aria-label={searchPh} className="min-w-0 flex-1 bg-transparent px-3.5 py-2.5 text-[15px] outline-none" style={{ color: "var(--color-text)" }} />
+      <button type="submit" aria-label="Search" className="inline-flex h-10 w-11 items-center justify-center" style={{ color: "var(--color-text)" }}>{searchSvg}</button>
+    </>
+  );
+  const searchFormStyle = { border: "1px solid var(--color-border)", background: "var(--color-bg)", borderRadius: 6 };
+  const searchBox = props.showSearch && variant === "left" ? (
+    <form action="/search" method="get" role="search" className="mx-6 hidden max-w-[480px] flex-1 items-center overflow-hidden md:flex" style={searchFormStyle}>
+      {searchField}
+    </form>
+  ) : null;
+  const searchIcon = props.showSearch ? (
+    <a href="/search" aria-label="Search" className={`${variant === "left" ? "inline-flex md:hidden" : "inline-flex"} items-center justify-center p-1.5`} style={{ color: "inherit" }}>
+      {searchSvg}
+    </a>
+  ) : null;
+
   // Sub-menu rows, kept in one place so the desktop panel and the mobile list
   // agree on what counts as a usable child (both text and destination present).
   const kids = (l: MenuLink) => (l.children ?? []).filter((c) => c.text && c.href);
@@ -181,6 +210,7 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         <div className="flex shrink-0 items-center gap-3">
           {ctaEl}
           {accountEl}{cartEl}
+          {searchIcon}
           {burger}
         </div>
       </div>
@@ -191,6 +221,7 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         <div className="flex w-full items-center justify-between md:justify-center">
           {brand}
           <div className="flex items-center gap-3 md:hidden">
+            {searchIcon}
             {accountEl}{cartEl}
             {burger}
           </div>
@@ -199,6 +230,7 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
           {desktopLinks}
           {ctaEl}
           {accountEl}{cartEl}
+          {searchIcon}
         </div>
       </div>
     );
@@ -213,8 +245,26 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         <div className="flex items-center gap-3">
           {ctaEl}
           {accountEl}{cartEl}
+          {searchIcon}
         </div>
       </div>
+    );
+  } else if (searchBox) {
+    // "left" with search: logo · search box · actions, the menu on its own row.
+    bar = (
+      <>
+        <div className="flex items-center justify-between gap-4 py-3">
+          {brand}
+          {searchBox}
+          <div className="flex items-center gap-3.5">
+            {ctaEl}
+            {accountEl}{cartEl}
+            {searchIcon}
+            {burger}
+          </div>
+        </div>
+        <div className="hidden justify-center pb-2.5 md:flex">{desktopLinks}</div>
+      </>
     );
   } else {
     // "left" (default): logo left, menu + button right.
@@ -258,6 +308,11 @@ export default function Header({ section, props, doc }: SectionProps<HeaderProps
         className="hidden flex-col gap-1 px-5 pb-3 max-md:peer-checked:flex"
         style={{ borderTop: "1px solid rgba(120,120,120,.18)" }}
       >
+        {props.showSearch && (
+          <form action="/search" method="get" role="search" className="my-1.5 flex items-center overflow-hidden" style={searchFormStyle}>
+            {searchField}
+          </form>
+        )}
         {items.map((l, i) => {
           const sub = kids(l);
 

@@ -22,6 +22,7 @@ interface Item {
   attributes?: Attribute[];
   variants?: Variant[];
   slug?: string;
+  badge?: string;
 }
 interface ProductsProps {
   label?: string;
@@ -29,7 +30,15 @@ interface ProductsProps {
   sub?: string;
   items?: Item[];
   imageFit?: string | Crop;
+  imageRatio?: string;
+  /** "shop" = the storefront card, mirroring SiteRenderer::shopCard. */
+  cardStyle?: "default" | "shop";
+  cardButton?: string;
+  orderVia?: "page" | "whatsapp";
+  orderLabel?: string;
 }
+
+const SHOP_RATIO: Record<string, string> = { square: "1 / 1", tall: "2 / 3", wide: "3 / 2", landscape: "16 / 9" };
 
 /** URL-safe slug for an item: its slug field, else built from the title. */
 function itemSlug(it: Item): string {
@@ -69,6 +78,73 @@ export default function Products({ section, props }: SectionProps<ProductsProps>
     ) : (
       <>{children}</>
     );
+
+  if (props.cardStyle === "shop") {
+    const auto = props.imageRatio === "auto";
+    const ratio = SHOP_RATIO[props.imageRatio ?? ""] ?? "3 / 4";
+    const waMode = props.orderVia === "whatsapp";
+    const shopCards = items.map((it, i) => {
+      const img = mediaUrl(it.image);
+      const href = !waMode && it.body?.trim() ? `/product/${itemSlug(it)}` : "";
+      const [sell, mrp, off] = priceBits(it);
+      const btnStyle = {
+        background: "linear-gradient(92deg,var(--color-secondary) 12%,color-mix(in srgb,var(--color-secondary) 30%,#fff) 99%)",
+        color: "#121212",
+        borderRadius: 7,
+      };
+      const btnText = waMode ? (props.orderLabel || "Order on WhatsApp") : href ? (props.cardButton || "View details") : it.cta?.text;
+      const btnHref = href || (!waMode ? it.cta?.href : "#");
+      const top = (
+        <>
+          <span className="relative block overflow-hidden" style={{ aspectRatio: auto ? undefined : ratio, borderRadius: "var(--radius)", background: "var(--color-surface)" }}>
+            {img && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={img} alt={it.title ?? ""} loading="lazy" className={auto ? "w-full" : "h-full w-full"} style={imageFitStyle(props.imageFit)} />
+            )}
+            {it.badge && (
+              <span className="absolute left-0 top-2.5 rounded-r-full py-1 pl-2.5 pr-3 text-[11px] font-bold" style={{ background: "#E9718B", color: "#121212" }}>{it.badge}</span>
+            )}
+          </span>
+          <span className="flex flex-1 flex-col gap-0.5 px-0.5 py-3">
+            {(sell || mrp) && (
+              <span className="flex flex-wrap items-baseline gap-2">
+                {sell && <b className="text-lg font-semibold">{sell}</b>}
+                {mrp && <s className="text-sm" style={{ color: "var(--color-muted)" }}>{mrp}</s>}
+                {off && <em className="text-xs font-bold not-italic text-green-700">{off}</em>}
+              </span>
+            )}
+            <span className="line-clamp-2 text-[15px] leading-snug">{it.title}</span>
+            {it.meta && <span className="text-[12.5px]" style={{ color: "var(--color-muted)" }}>{it.meta}</span>}
+          </span>
+        </>
+      );
+      return (
+        <div key={i} className="flex h-full flex-col text-left" style={{ color: "var(--color-text)" }}>
+          {href ? (
+            <a href={href} className="flex flex-1 flex-col no-underline" style={{ color: "inherit" }}>{top}</a>
+          ) : (
+            <div className="flex flex-1 flex-col">{top}</div>
+          )}
+          {btnText && btnHref && (
+            <a href={btnHref} className="flex min-h-10 items-center justify-center px-3 py-2 text-center text-[15px] no-underline" style={btnStyle}>{btnText}</a>
+          )}
+        </div>
+      );
+    });
+    const shopCols = variant === "cards-2" || variant === "list" ? "" : variant === "cards-3" ? "md:grid-cols-3" : "md:grid-cols-3 lg:grid-cols-4";
+    return (
+      <SectionShell section={section}>
+        <SectionHeader label={props.label} heading={props.heading} sub={props.sub} />
+        {isMarquee ? (
+          <Marquee slides={shopCards} />
+        ) : isCarousel ? (
+          <Carousel slides={shopCards} autoplayMs={0} slideClassName="shrink-0 basis-[46%] snap-start md:basis-[31%] lg:basis-[23.5%]" gapClassName="gap-[2%]" />
+        ) : (
+          <div className={`grid grid-cols-2 gap-x-3 gap-y-6 text-left md:gap-x-5 md:gap-y-8 ${shopCols}`}>{shopCards}</div>
+        )}
+      </SectionShell>
+    );
+  }
 
   const cards = items.map((it, i) => {
     const img = mediaUrl(it.image);

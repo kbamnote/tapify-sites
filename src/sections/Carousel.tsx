@@ -17,9 +17,17 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Reac
 export default function Carousel({
   slides,
   autoplayMs = 4000,
+  slideClassName = "shrink-0 basis-[85%] snap-start sm:basis-[46%] lg:basis-[31%]",
+  gapClassName = "gap-6",
+  controlsInside = false,
 }: {
   slides: ReactNode[];
   autoplayMs?: number;
+  /** Width of each slide. The banner slideshow passes full width. */
+  slideClassName?: string;
+  gapClassName?: string;
+  /** Lay the arrows and dots over the slides (banner slideshow) instead of below. */
+  controlsInside?: boolean;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -94,10 +102,10 @@ export default function Carousel({
     >
       <div
         ref={trackRef}
-        className="relative flex gap-6 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={`relative flex ${gapClassName} overflow-x-auto scroll-smooth snap-x snap-mandatory ${controlsInside ? "" : "pb-1"} [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}
       >
         {slides.map((s, i) => (
-          <div key={i} className="shrink-0 basis-[85%] snap-start sm:basis-[46%] lg:basis-[31%]">
+          <div key={i} className={slideClassName}>
             {s}
           </div>
         ))}
@@ -110,7 +118,7 @@ export default function Carousel({
             aria-label="Previous"
             onClick={() => goTo(active - 1)}
             style={arrowStyle}
-            className="absolute left-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-lg shadow-md transition-opacity hover:opacity-80"
+            className={`absolute ${controlsInside ? "left-3" : "left-1"} top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-lg shadow-md transition-opacity hover:opacity-80`}
           >
             ‹
           </button>
@@ -119,12 +127,12 @@ export default function Carousel({
             aria-label="Next"
             onClick={() => goTo(active + 1)}
             style={arrowStyle}
-            className="absolute right-1 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-lg shadow-md transition-opacity hover:opacity-80"
+            className={`absolute ${controlsInside ? "right-3" : "right-1"} top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-lg shadow-md transition-opacity hover:opacity-80`}
           >
             ›
           </button>
 
-          <div className="mt-4 flex justify-center gap-2">
+          <div className={controlsInside ? "absolute inset-x-0 bottom-3 flex justify-center gap-2" : "mt-4 flex justify-center gap-2"}>
             {slides.map((_, i) => (
               <button
                 key={i}
