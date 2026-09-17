@@ -37,6 +37,11 @@ import Categories from "./Categories";
 import Banners from "./Banners";
 import Features from "./Features";
 import Videos from "./Videos";
+import Calculators from "./Calculators";
+import Pillars from "./Pillars";
+import Quiz from "./Quiz";
+import Social from "./Social";
+import Steps from "./Steps";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> = {
@@ -66,6 +71,11 @@ export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> 
   banners: Banners,
   features: Features,
   videos: Videos,
+  calculators: Calculators,
+  pillars: Pillars,
+  quiz: Quiz,
+  social: Social,
+  steps: Steps,
 };
 
 export function hasSection(type: string): boolean {

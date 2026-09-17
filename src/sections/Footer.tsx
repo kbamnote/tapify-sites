@@ -18,6 +18,7 @@ interface FooterProps {
   showLegal?: boolean;
   privacyBody?: string;
   termsBody?: string;
+  disclaimer?: string;
 }
 
 const SOCIAL_LABEL: Record<string, string> = {
@@ -115,6 +116,15 @@ export default function Footer({ section, props, doc }: SectionProps<FooterProps
             </div>
           ))}
           {contact}
+        </div>
+      )}
+
+      {/* Registration details and risk disclaimers — mirrors .tf-foot-disc in SiteRenderer. */}
+      {props.disclaimer?.trim() && (
+        <div className="mt-7 space-y-2 rounded-lg px-4 py-4 text-left text-[12.5px] leading-relaxed opacity-85" style={{ background: "rgba(127,127,127,.08)" }}>
+          {props.disclaimer.split(/\n\s*\n/).filter((p) => p.trim()).map((p, i) => (
+            <p key={i} className="whitespace-pre-line">{p.trim()}</p>
+          ))}
         </div>
       )}
 
