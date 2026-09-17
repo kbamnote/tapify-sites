@@ -9,7 +9,7 @@
  */
 
 export const CALC_CSS = `
-.tf-cx{--cx-c:var(--color-primary);text-align:left}
+.tf-cx{--cx-c:var(--color-primary);text-align:left;container-type:inline-size;container-name:tfcx}
 .tf-cx-panel,.tf-cx-tab{--cx-soft:color-mix(in srgb,var(--cx-c) 20%,#fff)}
 .tf-cx-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:2px 2px 14px}
 .tf-cx-tab{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:10px 18px;border:1.5px solid var(--color-border);border-radius:14px;background:var(--color-bg);color:var(--color-text);font:inherit;cursor:pointer;text-align:left;transition:border-color .2s,box-shadow .2s,transform .2s,background .2s}
@@ -18,7 +18,7 @@ export const CALC_CSS = `
 .tf-cx-tag{margin:0;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--cx-c)}
 .tf-cx-tabt{font-size:15px;font-weight:600}
 .tf-cx-panel{padding:30px;border-radius:calc(var(--radius) + 6px);background:var(--color-bg);color:var(--color-text);border:1px solid var(--color-border);box-shadow:0 14px 44px rgba(16,24,40,.08)}
-.tf-cx-stacked .tf-cx-panel+.tf-cx-panel{margin-top:26px}
+.tf-cx--stacked .tf-cx-panel+.tf-cx-panel{margin-top:26px}
 .tf-cx-h{margin:2px 0 6px;font-family:var(--font-heading);font-size:22px;line-height:1.3}
 .tf-cx-note{margin:0 0 20px;font-size:14.5px;line-height:1.6;color:var(--color-muted)}
 .tf-cx-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:34px;align-items:start}
@@ -48,7 +48,25 @@ export const CALC_CSS = `
 .tf-cx-cta{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:18px;padding:13px 18px;border-radius:var(--radius);background:#11793F;color:#fff;font-weight:700;text-decoration:none}
 .tf-cx-warn{margin:0;font-weight:600;color:#B42318}
 .tf-cx-disc{max-width:860px;margin:20px auto 0;font-size:12.5px;line-height:1.6;text-align:center;color:var(--color-muted)}
-@media(max-width:860px){.tf-cx-body{grid-template-columns:minmax(0,1fr);gap:22px}.tf-cx-panel{padding:20px 16px}.tf-cx-tabs{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scrollbar-width:none}.tf-cx-tab{flex:none}}
+@container tfcx (max-width:760px){
+  .tf-cx-body{grid-template-columns:minmax(0,1fr);gap:20px}
+  .tf-cx-panel{padding:20px 16px}
+  .tf-cx-tabs{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;margin:0 -2px;padding:4px 2px 14px}
+  .tf-cx-tabs::-webkit-scrollbar{display:none}
+  .tf-cx-tab{flex:none;scroll-snap-align:start;padding:9px 14px}
+  .tf-cx-tabt{font-size:14px;white-space:nowrap}
+}
+@container tfcx (max-width:440px){
+  .tf-cx-lab{flex-wrap:wrap;gap:6px 10px;font-size:14px}
+  .tf-cx-lab label{flex:1 1 auto;min-width:0}
+  .tf-cx-num{margin-left:auto}
+  .tf-cx-num input{width:88px}
+  .tf-cx-out{padding:18px 14px}
+  .tf-cx-chart{gap:14px}
+  .tf-cx-chart svg{width:96px;height:96px}
+  .tf-cx-rows li{font-size:13.5px}
+  .tf-cx-cta{padding:12px 14px;font-size:14.5px}
+}
 `;
 
 export const PILLARS_CSS = `

@@ -169,7 +169,9 @@ export default function Calculators({ section, props, doc }: SectionProps<Calcul
     <SectionShell section={section}>
       <style>{CALC_CSS}</style>
       <SectionHeader label={props.label} heading={props.heading} sub={props.sub} />
-      <div className={`tf-cx tf-cx-${stacked ? "stacked" : "tabs"}`}>
+      {/* Double-dash modifier: "tf-cx-tabs" is the tab strip's class — reusing it on
+          the wrapper made the whole calculator one non-wrapping row on phones. */}
+      <div className={`tf-cx tf-cx--${stacked ? "stacked" : "tabs"}`}>
         {tabbed && (
           <div className="tf-cx-tabs" role="tablist">
             {items.map((it, i) => (
