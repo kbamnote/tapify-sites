@@ -37,6 +37,8 @@ import Categories from "./Categories";
 import Banners from "./Banners";
 import Features from "./Features";
 import Videos from "./Videos";
+import Shoppable from "./Shoppable";
+import Reels from "./Reels";
 import Calculators from "./Calculators";
 import Pillars from "./Pillars";
 import Quiz from "./Quiz";
@@ -71,6 +73,8 @@ export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> 
   banners: Banners,
   features: Features,
   videos: Videos,
+  shoppable: Shoppable,
+  reels: Reels,
   calculators: Calculators,
   pillars: Pillars,
   quiz: Quiz,
