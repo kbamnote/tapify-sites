@@ -7,7 +7,7 @@ interface DockProps {
   position?: "left" | "right";
   size?: "sm" | "md" | "lg";
   colour?: "brand" | "theme" | "dark";
-  mobile?: "bottom" | "side" | "hide";
+  mobile?: "bottom-right" | "bottom" | "side" | "hide";
 }
 
 /**
@@ -53,14 +53,14 @@ const SIZES: Record<string, [number, number]> = { sm: [34, 17], md: [42, 20], lg
  * inset, so it clears the iOS home indicator rather than sitting under it.
  */
 const CSS = `
-.tf-dock{position:fixed;top:50%;transform:translateY(-50%);z-index:60;display:flex;
+.tf-dock{position:fixed;top:50%;transform:translateY(-50%);z-index:1001;display:flex;
   flex-direction:column;gap:var(--dk-gap,8px);pointer-events:none}
 .tf-dock-left{left:max(10px,env(safe-area-inset-left))}
 .tf-dock-right{right:max(10px,env(safe-area-inset-right))}
 .tf-dock a{pointer-events:auto;display:grid;place-items:center;
   width:var(--dk-size,42px);height:var(--dk-size,42px);
   border-radius:var(--dk-radius,50%);background:var(--dk-bg,#fff);color:var(--dk-fg,#111);
-  box-shadow:0 2px 10px rgba(0,0,0,.16);text-decoration:none;
+  box-shadow:0 2px 10px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.55) inset;text-decoration:none;
   transition:transform .16s ease,box-shadow .16s ease,background .16s ease}
 .tf-dock a:hover{transform:translateX(var(--dk-nudge,3px));box-shadow:0 5px 18px rgba(0,0,0,.24)}
 .tf-dock-right a:hover{transform:translateX(calc(var(--dk-nudge,3px) * -1))}
@@ -74,10 +74,20 @@ const CSS = `
 
 @media (max-width:640px){
   .tf-dock-mobile-hide{display:none}
-  .tf-dock-mobile-bottom{top:auto;bottom:max(10px,env(safe-area-inset-bottom));
+  .tf-dock-mobile-bottom{top:auto;bottom:calc(14px + env(safe-area-inset-bottom,0px));
     left:50%;right:auto;transform:translateX(-50%);flex-direction:row}
-  .tf-dock-mobile-bottom a:hover{transform:none}
+  /* A column, because five 42px circles in a row come to 250px and would span
+     almost the whole width of a 375px phone — which reads as "bottom", not
+     "bottom right". */
+  .tf-dock-mobile-bottom-right{top:auto;bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    left:auto;right:12px;transform:none;flex-direction:column}
+  .tf-dock-mobile-bottom a:hover,.tf-dock-mobile-bottom-right a:hover{transform:none}
   .tf-dock-mobile-bottom.tf-dock-rail{flex-direction:row}
+  /* Lift clear of the site's own sticky action bar rather than hard-coding its
+     height, so this stays right if that bar changes. */
+  body:has(.tf-mobile-bar) .tf-dock-mobile-bottom,
+  body:has(.tf-mobile-bar) .tf-dock-mobile-bottom-right{
+    bottom:calc(80px + env(safe-area-inset-bottom,0px))}
 }
 @media (prefers-reduced-motion:reduce){
   .tf-dock a,.tf-dock a:hover{transition:none;transform:none}
@@ -91,7 +101,7 @@ export default function SocialDock({ section, props }: SectionProps<DockProps>) 
   const rail = section.variant === "rail";
   const side = props.position === "right" ? "right" : "left";
   const [box, glyph] = SIZES[props.size ?? "md"] ?? SIZES.md;
-  const mobile = props.mobile ?? "bottom";
+  const mobile = props.mobile ?? "bottom-right";
 
   const vars = {
     "--dk-size": box + "px",
