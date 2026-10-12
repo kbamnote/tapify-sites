@@ -43,6 +43,7 @@ import Calculators from "./Calculators";
 import Pillars from "./Pillars";
 import Quiz from "./Quiz";
 import Social from "./Social";
+import SocialDock from "./SocialDock";
 import Steps from "./Steps";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -79,6 +80,7 @@ export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> 
   pillars: Pillars,
   quiz: Quiz,
   social: Social,
+  socialdock: SocialDock,
   steps: Steps,
 };
 

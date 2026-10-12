@@ -139,6 +139,15 @@ export default async function SitePage({
         <RenderSections sections={page.sections} doc={doc} siteSlug={siteSlug} formStatus={formStatus} />
         {!page.sections.some((s) => s.type === "footer") &&
           (() => { const g = findGlobalSection(doc, "footer"); return g ? <RenderSection section={g} doc={doc} siteSlug={siteSlug} formStatus={formStatus} /> : null; })()}
+
+        {/* The floating social bar, carried across the site exactly like the
+            header and footer above. It is pinned to the viewport and takes no
+            space in the flow, so it is added once on any page and shows on all
+            of them — which is the only way a floating bar makes sense. The
+            guard is the same one those two use: when the section IS on this
+            page, RenderSections has already drawn it. */}
+        {!page.sections.some((s) => s.type === "socialdock") &&
+          (() => { const g = findGlobalSection(doc, "socialdock"); return g ? <RenderSection section={g} doc={doc} siteSlug={siteSlug} formStatus={formStatus} /> : null; })()}
       </main>
 
       {isDemo && (
