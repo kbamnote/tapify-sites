@@ -45,6 +45,7 @@ import Quiz from "./Quiz";
 import Social from "./Social";
 import SocialDock from "./SocialDock";
 import Steps from "./Steps";
+import Stockists from "./Stockists";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> = {
@@ -82,6 +83,7 @@ export const SECTION_REGISTRY: Record<string, ComponentType<SectionProps<any>>> 
   social: Social,
   socialdock: SocialDock,
   steps: Steps,
+  stockists: Stockists,
 };
 
 export function hasSection(type: string): boolean {
